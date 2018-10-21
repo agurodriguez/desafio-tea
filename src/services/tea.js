@@ -6,7 +6,7 @@ class Tea {
     getLastBusForBusStop(busStopId) {
     }
 
-    getTimeBetweenTwoPoints(fromPoint, toPoint) {
+    getTimeBetweenTwoPointsForBus(bus, fromPoint, toPoint) {
 
     }
 
