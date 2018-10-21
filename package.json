@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/agurodriguez/desafio-tea#readme",
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "request-promise": "^4.2.2"
   }
 }
