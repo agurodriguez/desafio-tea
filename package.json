@@ -1,0 +1,25 @@
+{
+  "name": "desafio-tea",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agurodriguez/desafio-tea.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agurodriguez/desafio-tea/issues"
+  },
+  "homepage": "https://github.com/agurodriguez/desafio-tea#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
