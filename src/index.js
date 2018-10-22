@@ -1,8 +1,5 @@
 const express = require('express');
-const orion = require('./services/orion');
-const tea = require('./services/tea');
-
-const PUBLIC_URL = 'https://592f2662.ngrok.io';
+const tea = require('./tea');
 
 let app = express();
 
@@ -16,9 +13,8 @@ app.get('/nextBus/:busLine/:busStopId', function (req, res) {
     res.send(req.params);
 });
 
-app.all('/orion/accumulate*', function (req, res) {
-    console.log('accumulate');
-    console.log(req.body);
+app.post('/orion/accumulate', function (req, res) {
+    tea.handleOrionAccumulate(req.body);
     res.sendStatus(200);
 });
 
@@ -26,7 +22,4 @@ app.listen(8080, function () {
     console.log('Example app listening on port 8080!');
 });
 
-orion
-    .subscribeToLocationChanges('62', `${PUBLIC_URL}/orion/accumulate`)
-    .then(body => console.log(body))
-    .catch(err => console.log(err));
+tea.run();

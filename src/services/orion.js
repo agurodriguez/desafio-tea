@@ -8,7 +8,7 @@ class Orion {
         this.client = new ngsi.Connection('http://kobauy.ddns.net:1026');
     }
 
-    subscribeToLocationChanges(busId, callbackUrl) {
+    subscribeToBusLocationChanges(busId, callbackUrl) {
         return this.client.v2.createSubscription({
             description: `A subscription to get location updates from bus ${busId}`,
             subject: {
@@ -27,7 +27,7 @@ class Orion {
                     'location'
                 ]
             },
-            expires: moment().add('2 hours').toISOString()
+            expires: moment().add('7 days').toISOString()
         });
     }
 
