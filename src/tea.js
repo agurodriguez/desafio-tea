@@ -1,4 +1,7 @@
+const mongoose = require('mongoose');
 const orion = require('./services/orion');
+
+const BusGeolocation = require('./dao/busGeolocation');
 
 const PUBLIC_URL = 'https://592f2662.ngrok.io';
 
@@ -6,9 +9,11 @@ class Tea {
 
     constructor() {
         this.busLocationChangesSubscription = undefined;
+        this.mongodb = mongoose.connect('mongodb://localhost/tea');
     }
 
     getNextBusForBusStop() {
+        
     }
     
     getLastBusForBusStop(busStopId) {
@@ -20,7 +25,17 @@ class Tea {
 
     handleOrionAccumulate(body) {
         if (body.subscriptionId == this.busLocationChangesSubscription.id) {
-            body.data.forEach(i => console.log(i));
+            body.data.forEach(item => {
+                let busGeolocation = new BusGeolocation({
+                    busId: item.id,
+                    busVariant: item.linea.value,
+                    latitude: item.location.value[0],
+                    longitude: item.location.value[1],
+                    timestamp: moment(item.timestamp.value).unix()
+                });
+
+                busGeolocation.save();
+            });
         }
     }
 
