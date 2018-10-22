@@ -23,14 +23,20 @@ Descripción                  | Url
 -----------------------------|------------------------------------------------------
 Ómnibus registrados en Orion | http://kobauy.ddns.net:1026/v2/entities?type=Bus
 
-#### Logs
+#### 💡 Pro Tips
 
-Para ver los logs ejecutar la siguiente secuencia de comandos:
+* Corregir servidor DNS:
 
-```bash
-ssh desafio@kobauy.ddns.net -p 1022
-sudo docker logs fiware_orion_1
-```
+    https://development.robinwinslow.uk/2016/06/23/fix-docker-networking-dns/
+
+    > Usar el 8.8.8.8 de Google
+
+* Logs:
+
+    ```bash
+    ssh desafio@kobauy.ddns.net -p 1022
+    sudo docker logs fiware_orion_1
+    ```
 
 ### Simulador
 

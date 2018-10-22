@@ -1,11 +1,14 @@
 const moment = require('moment');
 const ngsi = require('ngsijs');
-const request = require('request-promise');
 
 class Orion {
 
     constructor() {
         this.client = new ngsi.Connection('http://kobauy.ddns.net:1026');
+    }
+
+    getBuses() {
+        return this.client.v2.listEntities('Bus');
     }
 
     subscribeToBusLocationChanges(busId, callbackUrl) {

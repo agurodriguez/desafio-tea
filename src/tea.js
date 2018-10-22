@@ -14,8 +14,17 @@ class Tea {
         mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
     }
 
-    getNextBusForBusStop() {
-        
+    getNextBusForBusStop(busVariant, busStopId) {
+        return new Promise((resolve, reject) => {        
+            orion
+                .getBuses()
+                .then(buses => {
+                    // TODO: probar
+                    buses.filter(b.linea == busVariant);
+                    resolve(buses);
+                })
+                .catch(reject);
+        })
     }
     
     getLastBusForBusStop(busStopId) {

@@ -6,9 +6,9 @@ let app = express();
 app.use(require('body-parser').urlencoded({ extended: false }));
 app.use(require('body-parser').json());
 
-app.get('/nextBus/:busLine/:busStopId', function (req, res) {
-    let nextBusForBusStop = tea.getNextBusForBusStop(req.params.busLine, req.params.busStopId);
-    let lastBusForBusStop = tea.getLastBusForBusStop(req.params.busLine, req.params.busStopId);
+app.get('/nextBus/:busVariant/:busStopId', async function (req, res) {
+    let nextBusForBusStop = await tea.getNextBusForBusStop(req.params.busVariant, req.params.busStopId);
+    let lastBusForBusStop = tea.getLastBusForBusStop(req.params.busVariant, req.params.busStopId);
     let time = tea.getTimeBetweenTwoPointsForBus(lastBusForBusStop, [-56.4333, 32.8989], [-56.4333, 32.8989]);
     res.send(req.params);
 });
@@ -19,7 +19,7 @@ app.post('/orion/accumulate', function (req, res) {
 });
 
 app.listen(8080, function () {
-    console.log('Example app listening on port 8080!');
+    console.log('koba-tea running on port 8080');
 });
 
 tea.run();
