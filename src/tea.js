@@ -53,17 +53,31 @@ class Tea {
                  * Todos esos son los buses que están viniendo a la parada desde la que estoy
                  * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
                  */
+                let busVariantStop = busVariantStops.filter((busStop) => busStopId == busStop.codigoParada);
+
+                console.log(busVariantStop);
+                busVariantStops = busVariantStops.filter((busStop) => busStop.ordinal <= busVariantStop[0].ordinal);
+
                 let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => 
-                    orion.getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                    orion.getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long]).then(res => {
+                         if (res.length > 0) {
+                             res[0].busStopOrdinal = busVariantStop.ordinal; 
+                        }
+                        
+                        return res;
+                    })
                 );
                 
                 Promise
                     .all(getBusesOfVariantNearToPromises)
                     .then(values => {
                         let buses = [].concat(...values);
-                        if (buses.length > 1) {
-                            // TODO: decidir con cuál quedarse
+                        if (buses.length > 0) {
+                            buses = buses[buses.length - 1];
+                        } else {
+                            buses = undefined;
                         }
+
                         resolve(buses);
                     })
                     .catch(reject);
