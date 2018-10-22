@@ -19,7 +19,33 @@ class Tea {
     getLastBusForBusStop(busStopId) {
     }
 
-    getTimeBetweenTwoPointsForBus(bus, fromPoint, toPoint) {
+    getTimeBetweenTwoPointsForBus(bus, fromPointLatitude, fromPointLong, toPointLatitude, toPointLong) {
+        //obtengo el ultimo dato de origen
+        var lastStopAtOrigin = BusGeolocation.find({busId: bus, latitude: fromPointLatitude, longitude: fromPointLong}).sort({"timestamp": -1}).limit(1);
+
+        //obtengo el ultimo dato de destino
+        var lastStopAtDestination = BusGeolocation.find({busId: bus, latitude: toPointLatitude, longitude: toPointLong}).sort({"timestamp": -1}).limit(1);
+
+        //obtener date
+
+        var timeStampOrigin = lastStopAtOrigin[0].timestamp;
+        var timeStampDestination = lastStopAtDestination[0].timestamp;
+
+        //calculo la diferencia
+        var date1, date2;  
+        date1 = new Date(timeStampOrigin);
+        date2 = new Date(timeStampDestination);
+
+        var res = Math.abs(date1 - date2) / 1000;
+        var days = Math.floor(res / 86400);   
+        var hours = Math.floor(res / 3600) % 24;        
+        var minutes = Math.floor(res / 60) % 60;
+        var seconds = res % 60;
+
+        //devuelvo el resultado en segundos
+        return (days*24*60*60 + hours*60*60 + minutes*60 + seconds);
+
+        //});
 
     }
 
