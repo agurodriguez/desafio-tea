@@ -1,3 +1,4 @@
+const moment = require('moment');
 const mongoose = require('mongoose');
 const orion = require('./services/orion');
 
@@ -9,7 +10,8 @@ class Tea {
 
     constructor() {
         this.busLocationChangesSubscription = undefined;
-        this.mongodb = mongoose.connect('mongodb://localhost/tea');
+        
+        mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
     }
 
     getNextBusForBusStop() {
@@ -29,8 +31,8 @@ class Tea {
                 let busGeolocation = new BusGeolocation({
                     busId: item.id,
                     busVariant: item.linea.value,
-                    latitude: item.location.value[0],
-                    longitude: item.location.value[1],
+                    latitude: item.location.value.coordinates[0],
+                    longitude: item.location.value.coordinates[1],
                     timestamp: moment(item.timestamp.value).unix()
                 });
 
