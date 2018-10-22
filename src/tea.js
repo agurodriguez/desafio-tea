@@ -14,6 +14,10 @@ class Tea {
         this.mongodb = mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
     }
 
+    /**
+     * Retorna el calendario (las pasadas) para la variante de línea `busVariant`
+     * @param {number} busVariant 
+     */
     getBusSchedules(busVariant) {
         return new Promise((resolve, reject) => {
             let parser = csv({ columns: true, delimiter: ';' }, (err, data) => {
@@ -27,6 +31,10 @@ class Tea {
         });
     }
 
+    /**
+     * Retorna todas las paradas para la variante de línea `busVariant`
+     * @param {number} busVariant 
+     */
     getBusVariantStops(busVariant) {
         return new Promise((resolve, reject) => {
             montevideo.getStopsByBusVariant(busVariant)
@@ -40,6 +48,8 @@ class Tea {
     /**
      * Retorna el siguiente ómnibus con variante de línea igual a `busVariant` 
      * en pasar por la parada identificada por `busStopId`
+     * @param {number} busVariant 
+     * @param {number} busStopId 
      */
     getNextBusForBusStop(busVariant, busStopId) {
         return new Promise((resolve, reject) => {
@@ -71,15 +81,28 @@ class Tea {
         });
     }
     
-    getLastBusForBusStop(busStopId) {
+    /**
+     * Retorna el último ómnibus con variante de línea igual a `busVariant` 
+     * que pasó por la parada identificada por `busStopId`
+     * @param {number} busVariant 
+     * @param {number} busStopId 
+     */
+    getLastBusForBusStop(busVariant, busStopId) {
     }
 
-    getTimeBetweenTwoPointsForBus(bus, fromPointLatitude, fromPointLong, toPointLatitude, toPointLong) {
+    /**
+     * Retorna el tiempo que demoró el ómnibus identificado por `busId` en
+     * ir del punto `from` al punto `to`
+     * @param {number} busId 
+     * @param {Point} from 
+     * @param {Point} to
+     */
+    getTimeBetweenTwoPointsForBus(busId, from, to) {
         //obtengo el ultimo dato de origen
-        var lastStopAtOrigin = BusGeolocation.find({busId: bus, latitude: fromPointLatitude, longitude: fromPointLong}).sort({"timestamp": -1}).limit(1);
+        var lastStopAtOrigin = BusGeolocation.find({busId: bus, latitude: from[0], longitude: from[1]}).sort({"timestamp": -1}).limit(1);
 
         //obtengo el ultimo dato de destino
-        var lastStopAtDestination = BusGeolocation.find({busId: bus, latitude: toPointLatitude, longitude: toPointLong}).sort({"timestamp": -1}).limit(1);
+        var lastStopAtDestination = BusGeolocation.find({busId: bus, latitude: to[0], longitude: to[1]}).sort({"timestamp": -1}).limit(1);
 
         //obtener date
 
@@ -101,9 +124,13 @@ class Tea {
         return (days*24*60*60 + hours*60*60 + minutes*60 + seconds);
 
         //});
-
     }
 
+    /**
+     * Maneja la invocación de Orion cuando se dispara alguno de los eventos 
+     * a los que koba-tea se suscribió
+     * @param {object} body
+     */
     handleOrionAccumulate(body) {
         if (body.subscriptionId == this.busLocationChangesSubscription.id) {
             body.data.forEach(item => {
@@ -120,6 +147,9 @@ class Tea {
         }
     }
 
+    /**
+     * Inicia los procesos de koba-tea
+     */
     run() {
         orion
             .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
