@@ -9,49 +9,63 @@ const PUBLIC_URL = 'https://592f2662.ngrok.io';
 class Tea {
   constructor() {
     this.busLocationChangesSubscription = undefined;
+
+    mongoose.connect(
+      'mongodb://localhost/tea',
+      { useNewUrlParser: true }
+    );
   }
 
-    constructor() {
-        this.busLocationChangesSubscription = undefined;
-        
-        mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
-    }
+  getNextBusForBusStop() {}
 
-    getNextBusForBusStop() {
-        
-    }
-    
-    getLastBusForBusStop(busStopId) {
-    }
+  getLastBusForBusStop(busStopId) {}
 
-    getTimeBetweenTwoPointsForBus(bus, fromPointLatitude, fromPointLong, toPointLatitude, toPointLong) {
-        //obtengo el ultimo dato de origen
-        var lastStopAtOrigin = BusGeolocation.find({busId: bus, latitude: fromPointLatitude, longitude: fromPointLong}).sort({"timestamp": -1}).limit(1);
+  getTimeBetweenTwoPointsForBus(
+    bus,
+    fromPointLatitude,
+    fromPointLong,
+    toPointLatitude,
+    toPointLong
+  ) {
+    //obtengo el ultimo dato de origen
+    var lastStopAtOrigin = BusGeolocation.find({
+      busId: bus,
+      latitude: fromPointLatitude,
+      longitude: fromPointLong
+    })
+      .sort({ timestamp: -1 })
+      .limit(1);
 
-        //obtengo el ultimo dato de destino
-        var lastStopAtDestination = BusGeolocation.find({busId: bus, latitude: toPointLatitude, longitude: toPointLong}).sort({"timestamp": -1}).limit(1);
+    //obtengo el ultimo dato de destino
+    var lastStopAtDestination = BusGeolocation.find({
+      busId: bus,
+      latitude: toPointLatitude,
+      longitude: toPointLong
+    })
+      .sort({ timestamp: -1 })
+      .limit(1);
 
-        //obtener date
+    //obtener date
 
-        var timeStampOrigin = lastStopAtOrigin[0].timestamp;
-        var timeStampDestination = lastStopAtDestination[0].timestamp;
+    var timeStampOrigin = lastStopAtOrigin[0].timestamp;
+    var timeStampDestination = lastStopAtDestination[0].timestamp;
 
-        //calculo la diferencia
-        var date1, date2;  
-        date1 = new Date(timeStampOrigin);
-        date2 = new Date(timeStampDestination);
+    //calculo la diferencia
+    var date1, date2;
+    date1 = new Date(timeStampOrigin);
+    date2 = new Date(timeStampDestination);
 
-        var res = Math.abs(date1 - date2) / 1000;
-        var days = Math.floor(res / 86400);   
-        var hours = Math.floor(res / 3600) % 24;        
-        var minutes = Math.floor(res / 60) % 60;
-        var seconds = res % 60;
+    var res = Math.abs(date1 - date2) / 1000;
+    var days = Math.floor(res / 86400);
+    var hours = Math.floor(res / 3600) % 24;
+    var minutes = Math.floor(res / 60) % 60;
+    var seconds = res % 60;
 
-        //devuelvo el resultado en segundos
-        return (days*24*60*60 + hours*60*60 + minutes*60 + seconds);
+    //devuelvo el resultado en segundos
+    return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds;
 
-        //});
-    }
+    //});
+  }
 
   handleOrionAccumulate(body) {
     if (body.subscriptionId == this.busLocationChangesSubscription.id) {
@@ -59,26 +73,26 @@ class Tea {
     }
   }
 
-    handleOrionAccumulate(body) {
-        if (body.subscriptionId == this.busLocationChangesSubscription.id) {
-            body.data.forEach(item => {
-                let busGeolocation = new BusGeolocation({
-                    busId: item.id,
-                    busVariant: item.linea.value,
-                    latitude: item.location.value.coordinates[0],
-                    longitude: item.location.value.coordinates[1],
-                    timestamp: moment(item.timestamp.value).unix()
-                });
+  handleOrionAccumulate(body) {
+    if (body.subscriptionId == this.busLocationChangesSubscription.id) {
+      body.data.forEach(item => {
+        let busGeolocation = new BusGeolocation({
+          busId: item.id,
+          busVariant: item.linea.value,
+          latitude: item.location.value.coordinates[0],
+          longitude: item.location.value.coordinates[1],
+          timestamp: moment(item.timestamp.value).unix()
+        });
 
-                busGeolocation.save();
-            });
-        }
+        busGeolocation.save();
+      });
     }
+  }
 
   // start and end are objects with latitude and longitude
   //decimals (default 2) is number of decimals in the output
   //return is distance in kilometers.
-  getDistance = function(start, end, decimals) {
+  getDistance(start, end, decimals) {
     decimals = decimals || 2;
     var earthRadius = 6371; // km
     lat1 = parseFloat(start.latitude);
@@ -97,9 +111,9 @@ class Tea {
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var d = earthRadius * c;
     return Math.round(d * Math.pow(10, decimals)) / Math.pow(10, decimals);
-  };
+  }
 
-  getClosest = (points, busStop) => {
+  getClosest(points, busStop) {
     var distance = -1;
     var result;
     Array.prototype.forEach.call(points, p => {
@@ -111,7 +125,7 @@ class Tea {
       }
     });
     return result;
-  };
+  }
 }
 
 module.exports = new Tea();
