@@ -1,14 +1,29 @@
 const moment = require('moment');
 const ngsi = require('ngsijs');
+const request = require('request-promise');
 
 class Orion {
 
     constructor() {
-        this.client = new ngsi.Connection('http://kobauy.ddns.net:1026');
+        this.apiUrl = 'http://kobauy.ddns.net:1026';
+        this.client = new ngsi.Connection(this.apiUrl);
     }
 
-    getBuses() {
-        return this.client.v2.listEntities('Bus');
+    getBusesOfVariantNearTo(busVariant, point) {
+        // usamos una request plana porque ngsijs parece no soportar el atributo georel 
+        // (Ver http://conwetlab.github.io/ngsijs/stable/NGSI.Connection.html#.%22v2.listEntities%22__anchor)
+        return request.get(
+            `${this.apiUrl}/v2/entities`, 
+            { 
+                qs: { 
+                    type: 'Bus', 
+                    q: `linea:'${busVariant}'`,
+                    georel: 'near;maxDistance:100',
+                    geometry: 'point',
+                    coords: `${point[0]},${point[1]}`
+                } 
+            }
+        );
     }
 
     subscribeToBusLocationChanges(busId, callbackUrl) {

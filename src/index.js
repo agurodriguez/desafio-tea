@@ -23,3 +23,5 @@ app.listen(8080, function () {
 });
 
 tea.run();
+
+tea.getNextBusForBusStop(7921, 2);
