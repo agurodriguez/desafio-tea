@@ -2,6 +2,7 @@ const csv = require('csv-parse');
 const fs = require('fs');
 const moment = require('moment');
 const mongoose = require('mongoose');
+const montevideo = require('./services/montevideo');
 const orion = require('./services/orion');
 
 const BusGeolocation = require('./dao/busGeolocation');
@@ -27,7 +28,13 @@ class Tea {
     }
 
     getBusVariantStops(busVariant) {
-        
+        return new Promise((resolve, reject) => {
+            montevideo.getStopsByBusVariant(busVariant)
+                .then((stops) => {
+                    resolve(stops.filter(stop => stop.linea == busVariant))
+                })
+                .catch(reject);
+        });
     }
 
     /**
