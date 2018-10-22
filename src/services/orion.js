@@ -5,15 +5,14 @@ const request = require('request-promise');
 class Orion {
 
     constructor() {
-        this.apiUrl = 'http://kobauy.ddns.net:1026';
-        this.client = new ngsi.Connection(this.apiUrl);
+        this.client = new ngsi.Connection(process.env.ORION_URL);
     }
 
     getBusesOfVariantNearTo(busVariant, point) {
         // usamos una request plana porque ngsijs parece no soportar el atributo georel 
         // (Ver http://conwetlab.github.io/ngsijs/stable/NGSI.Connection.html#.%22v2.listEntities%22__anchor)
         return request.get(
-            `${this.apiUrl}/v2/entities`, 
+            `${process.env.ORION_URL}/v2/entities`, 
             { 
                 qs: { 
                     type: 'Bus', 
@@ -26,9 +25,9 @@ class Orion {
         );
     }
 
-    subscribeToBusLocationChanges(busId, callbackUrl) {
+    subscribeToBusLocationChanges(callbackUrl) {
         return this.client.v2.createSubscription({
-            description: `A subscription to get location updates from bus ${busId}`,
+            description: `A subscription to get buses location updates`,
             subject: {
                 entities: [
                     {

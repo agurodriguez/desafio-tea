@@ -4,8 +4,6 @@ const orion = require('./services/orion');
 
 const BusGeolocation = require('./dao/busGeolocation');
 
-const PUBLIC_URL = 'https://4896001a.ngrok.io';
-
 class Tea {
 
     constructor() {
@@ -96,7 +94,7 @@ class Tea {
 
     run() {
         orion
-            .subscribeToBusLocationChanges('62', `${PUBLIC_URL}/orion/accumulate`)
+            .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
             .then(body => {
                 this.busLocationChangesSubscription = body.subscription
             })

@@ -1,3 +1,12 @@
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+    // TODO: Las dos líneas que siguen deberían ser eliminadas luego de que todos los miembros 
+    // del equipo las tengan en su equipo. La idea es que incorporen el archivo .env automaticamente 
+    // y su proceso de desarrollo no se vea interrumpido 
+    const fs = require('fs');
+    if (!fs.existsSync('.env')) fs.copyFileSync('.env.sample', '.env'); 
+    require('dotenv').config();
+}
+
 const express = require('express');
 const tea = require('./tea');
 
@@ -18,8 +27,8 @@ app.post('/orion/accumulate', function (req, res) {
     res.sendStatus(200);
 });
 
-app.listen(8080, function () {
-    console.log('koba-tea running on port 8080');
+app.listen(process.env.PORT, function () {
+    console.log(`koba-tea running on port ${process.env.PORT}`);
 });
 
 tea.run();
