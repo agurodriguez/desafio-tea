@@ -1,3 +1,5 @@
+const csv = require('csv-parse');
+const fs = require('fs');
 const moment = require('moment');
 const mongoose = require('mongoose');
 const orion = require('./services/orion');
@@ -11,36 +13,54 @@ class Tea {
         this.mongodb = mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
     }
 
-    getNextBusForBusStop(busVariant, busStopId) {
-        return new Promise((resolve, reject) => {  
-            // TODO: 
-            /*
-            * Una posible implementación creo que podría ser: tomar la colección de 
-            * paradas de `busVariant`, pararse en la parada con cuyo `id` sea igual a 
-            * `busStopId` y ver qué ordinal tiene. Luego iterar hacia atrás en la colección
-            * y usar el método `getBusesOfVariantNearTo` para obtener los buses con el mismo 
-            * `busVariant` que estén cerca de alguna de las paradas anteriores.
-            * Todos esos son los buses que están viniendo a la parada desde la que estoy
-            * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
-            */
-            let busVariantStops = [
-                { location: [-34.879585, -56.14836] }
-            ];
-
-            let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => 
-                orion.getBusesOfVariantNearTo(busVariant, busVariantStop.location)
-            );
+    getBusSchedules(busVariant) {
+        return new Promise((resolve, reject) => {
+            let parser = csv({ columns: true, delimiter: ';' }, (err, data) => {
+                if (err) reject(err);
+                else {
+                    resolve(data.filter(i => parseInt(i.cod_variante, 10) === busVariant));
+                }
+            });
             
-            Promise
-                .all(getBusesOfVariantNearToPromises)
-                .then(values => {
-                    let buses = [].concat(...values);
-                    if (buses.length > 1) {
-                        // TODO: decidir con cuál quedarse
-                    }
-                    resolve(buses);
-                })
-                .catch(reject);
+            fs.createReadStream(`${__dirname}/../data/uptu_pasada_circular.csv`).pipe(parser);
+        });
+    }
+
+    getBusVariantStops(busVariant) {
+        
+    }
+
+    /**
+     * Retorna el siguiente ómnibus con variante de línea igual a `busVariant` 
+     * en pasar por la parada identificada por `busStopId`
+     */
+    getNextBusForBusStop(busVariant, busStopId) {
+        return new Promise((resolve, reject) => {
+            this.getBusVariantStops(busVariant).then(busVariantStops => {
+                /*
+                 * Una posible implementación creo que podría ser: tomar la colección de 
+                 * paradas de `busVariant`, pararse en la parada con cuyo `id` sea igual a 
+                 * `busStopId` y ver qué ordinal tiene. Luego iterar hacia atrás en la colección
+                 * y usar el método `getBusesOfVariantNearTo` para obtener los buses con el mismo 
+                 * `busVariant` que estén cerca de alguna de las paradas anteriores.
+                 * Todos esos son los buses que están viniendo a la parada desde la que estoy
+                 * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
+                 */
+                let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => 
+                    orion.getBusesOfVariantNearTo(busVariant, busVariantStop.location)
+                );
+                
+                Promise
+                    .all(getBusesOfVariantNearToPromises)
+                    .then(values => {
+                        let buses = [].concat(...values);
+                        if (buses.length > 1) {
+                            // TODO: decidir con cuál quedarse
+                        }
+                        resolve(buses);
+                    })
+                    .catch(reject);
+            });
         });
     }
     
