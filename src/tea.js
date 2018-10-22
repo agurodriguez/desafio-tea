@@ -54,7 +54,7 @@ class Tea {
                  * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
                  */
                 let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => 
-                    orion.getBusesOfVariantNearTo(busVariant, busVariantStop.location)
+                    orion.getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
                 );
                 
                 Promise

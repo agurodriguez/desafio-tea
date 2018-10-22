@@ -33,7 +33,4 @@ app.listen(process.env.PORT, function () {
 
 tea.run();
 
-tea.getBusVariantStops(7921)
-    .then(res => console.log(res));
-
-//tea.getNextBusForBusStop(7921, 2).then(res => console.log(res)).catch(err => console.log(err));
+tea.getNextBusForBusStop(7921, 2).then(res => console.log(res)).catch(err => console.log(err));
