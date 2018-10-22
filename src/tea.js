@@ -30,9 +30,10 @@ class Tea {
             let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => 
                 orion.getBusesOfVariantNearTo(busVariant, busVariantStop.location)
             );
-
+            
             Promise
-                .all(getBusesOfVariantNearToPromises, (values) => {
+                .all(getBusesOfVariantNearToPromises)
+                .then(values => {
                     let buses = [].concat(...values);
                     if (buses.length > 1) {
                         // TODO: decidir con cuál quedarse

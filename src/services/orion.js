@@ -20,7 +20,8 @@ class Orion {
                     georel: 'near;maxDistance:100',
                     geometry: 'point',
                     coords: `${point[0]},${point[1]}`
-                } 
+                },
+                json: true
             }
         );
     }
