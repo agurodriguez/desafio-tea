@@ -17,7 +17,7 @@ class Orion {
                 qs: { 
                     type: 'Bus', 
                     q: `linea:'${busVariant}'`,
-                    georel: 'near;maxDistance:100',
+                    georel: 'near;maxDistance:500',
                     geometry: 'point',
                     coords: `${point[0]},${point[1]}`,
                     orderBy: 'geo:distance',
