@@ -8,7 +8,7 @@
 
 ## Playground
 
-[Ir al playground](playground/index.html)
+[Ir al playground](https://koba-tea.herokuapp.com/playground)
 
 ⚠️ Deshabilitar CORS para poder obtener los datos de los ómnibus en tiempo real (Ver https://github.com/conwetlab/ngsijs#using-ngsijs-from-normal-web-pages)
 
