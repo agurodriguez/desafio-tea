@@ -1,11 +1,11 @@
+const csv = require('csv-parse');
+const fs = require('fs');
 const moment = require('moment');
 const mongoose = require('mongoose');
+const montevideo = require('./services/montevideo');
 const orion = require('./services/orion');
 
 const BusGeolocation = require('./dao/busGeolocation');
-const Bus = require('./bus');
-
-const PUBLIC_URL = 'https://3464c9d5.ngrok.io';
 
 class Tea {
   constructor() {
@@ -16,54 +16,127 @@ class Tea {
     );
   }
 
-  getNextBusForBusStop(busVariant, busStopId) {
+  /**
+   * Retorna el calendario (las pasadas) para la variante de línea `busVariant`
+   * @param {number} busVariant
+   */
+  getBusSchedules(busVariant) {
     return new Promise((resolve, reject) => {
-      // TODO:
-      /*
-            * Una posible implementación creo que podría ser: tomar la colección de 
-            * paradas de `busVariant`, pararse en la parada con cuyo `id` sea igual a 
-            * `busStopId` y ver qué ordinal tiene. Luego iterar hacia atrás en la colección
-            * y usar el método `getBusesOfVariantNearTo` para obtener los buses con el mismo 
-            * `busVariant` que estén cerca de alguna de las paradas anteriores.
-            * Todos esos son los buses que están viniendo a la parada desde la que estoy
-            * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
-            */
-      let busVariantStops = [{ location: [-34.879585, -56.14836] }];
-
-      let getBusesOfVariantNearToPromises = busVariantStops.map(
-        busVariantStop =>
-          orion.getBusesOfVariantNearTo(busVariant, busVariantStop.location)
-      );
-
-      Promise.all(getBusesOfVariantNearToPromises, values => {
-        let buses = [].concat(...values);
-        if (buses.length > 1) {
-          // TODO: decidir con cuál quedarse
+      let parser = csv({ columns: true, delimiter: ';' }, (err, data) => {
+        if (err) reject(err);
+        else {
+          resolve(
+            data.filter(i => parseInt(i.cod_variante, 10) === busVariant)
+          );
         }
-        resolve(buses);
-      }).catch(reject);
+      });
+
+      fs.createReadStream(`${__dirname}/../data/uptu_pasada_circular.csv`).pipe(
+        parser
+      );
     });
   }
 
-  getLastBusForBusStop(busStop, variant) {
+  /**
+   * Retorna todas las paradas para la variante de línea `busVariant`
+   * @param {number} busVariant
+   */
+  getBusVariantStops(busVariant) {
+    return new Promise((resolve, reject) => {
+      montevideo
+        .getStopsByBusVariant(busVariant)
+        .then(stops => {
+          resolve(stops.filter(stop => stop.linea == busVariant));
+        })
+        .catch(reject);
+    });
+  }
+
+  /**
+   * Retorna el siguiente ómnibus con variante de línea igual a `busVariant`
+   * en pasar por la parada identificada por `busStopId`
+   * @param {number} busVariant
+   * @param {number} busStopId
+   */
+  getNextBusForBusStop(busVariant, busStopId) {
+    return new Promise((resolve, reject) => {
+      this.getBusVariantStops(busVariant).then(busVariantStops => {
+        /*
+                 * Una posible implementación creo que podría ser: tomar la colección de 
+                 * paradas de `busVariant`, pararse en la parada con cuyo `id` sea igual a 
+                 * `busStopId` y ver qué ordinal tiene. Luego iterar hacia atrás en la colección
+                 * y usar el método `getBusesOfVariantNearTo` para obtener los buses con el mismo 
+                 * `busVariant` que estén cerca de alguna de las paradas anteriores.
+                 * Todos esos son los buses que están viniendo a la parada desde la que estoy
+                 * pidiendo el ETA. (Si hay más de uno debo decidir con cuál quedarme)
+                 */
+        let busVariantStop = busVariantStops.filter(
+          busStop => busStopId == busStop.codigoParada
+        );
+
+        console.log(busVariantStop);
+        busVariantStops = busVariantStops.filter(
+          busStop => busStop.ordinal <= busVariantStop[0].ordinal
+        );
+
+        let getBusesOfVariantNearToPromises = busVariantStops.map(
+          busVariantStop =>
+            orion
+              .getBusesOfVariantNearTo(busVariant, [
+                busVariantStop.lat,
+                busVariantStop.long
+              ])
+              .then(res => {
+                if (res.length > 0) {
+                  res[0].busStopOrdinal = busVariantStop.ordinal;
+                }
+
+                return res;
+              })
+        );
+
+        Promise.all(getBusesOfVariantNearToPromises)
+          .then(values => {
+            let buses = [].concat(...values);
+            if (buses.length > 0) {
+              buses = buses[buses.length - 1];
+            } else {
+              buses = undefined;
+            }
+
+            resolve(buses);
+          })
+          .catch(reject);
+      });
+    });
+  }
+
+  /**
+   * Retorna el último ómnibus con variante de línea igual a `busVariant`
+   * que pasó por la parada identificada por `busStopId`
+   * @param {number} busVariant
+   * @param {number} busStopId
+   */
+  getLastBusForBusStop(busVariant, busStop) {
     var bus = new Bus(
       /*busStop*/ { longitude: -34.927965, latitude: -56.1618 }
     );
-    bus.getBusesGeolocations(/*variant*/ 7517).then(r => console.log(r));
+    bus.getBusesGeolocations(/*busVariant*/ 7517).then(r => console.log(r));
   }
 
-  getTimeBetweenTwoPointsForBus(
-    bus,
-    fromPointLatitude,
-    fromPointLong,
-    toPointLatitude,
-    toPointLong
-  ) {
+  /**
+   * Retorna el tiempo que demoró el ómnibus identificado por `busId` en
+   * ir del punto `from` al punto `to`
+   * @param {number} busId
+   * @param {Point} from
+   * @param {Point} to
+   */
+  getTimeBetweenTwoPointsForBus(busId, from, to) {
     //obtengo el ultimo dato de origen
     var lastStopAtOrigin = BusGeolocation.find({
       busId: bus,
-      latitude: fromPointLatitude,
-      longitude: fromPointLong
+      latitude: from[0],
+      longitude: from[1]
     })
       .sort({ timestamp: -1 })
       .limit(1);
@@ -71,8 +144,8 @@ class Tea {
     //obtengo el ultimo dato de destino
     var lastStopAtDestination = BusGeolocation.find({
       busId: bus,
-      latitude: toPointLatitude,
-      longitude: toPointLong
+      latitude: to[0],
+      longitude: to[1]
     })
       .sort({ timestamp: -1 })
       .limit(1);
@@ -98,6 +171,12 @@ class Tea {
 
     //});
   }
+
+  /**
+   * Maneja la invocación de Orion cuando se dispara alguno de los eventos
+   * a los que koba-tea se suscribió
+   * @param {object} body
+   */
   handleOrionAccumulate(body) {
     if (body.subscriptionId == this.busLocationChangesSubscription.id) {
       body.data.forEach(item => {
@@ -110,18 +189,23 @@ class Tea {
         });
 
         busGeolocation.save();
-        console.log('Se guardó uno');
       });
     }
   }
 
+  /**
+   * Inicia los procesos de koba-tea
+   */
   run() {
     orion
-      .subscribeToBusLocationChanges('62', `${PUBLIC_URL}/orion/accumulate`)
+      .subscribeToBusLocationChanges(
+        `${process.env.PUBLIC_URL}/orion/accumulate`
+      )
       .then(body => {
         this.busLocationChangesSubscription = body.subscription;
       })
       .catch(err => console.log(err));
   }
 }
+
 module.exports = new Tea();
