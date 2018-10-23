@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="koba-tea playground">
+    <meta name="author" content="Koba">
+    <title>koba-tea playground</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css" />
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+        #map-wrapper {
+            position: relative;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex flex-column h-100">
+        <div class="">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">koba-tea</a>
+        
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mr-auto">
+                        <!-- 
+                        <li class="nav-item active">
+                            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Link</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Dropdown
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#">Action</a>
+                            <a class="dropdown-item" href="#">Another action</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Something else here</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#">Disabled</a>
+                        </li> 
+                        -->
+                    </ul>
+                    <!-- 
+                    <form class="form-inline my-2 my-lg-0">
+                        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                    </form>
+                        -->
+                </div>
+            </nav>
+        </div>
+        <div id="map-wrapper" class="flex-grow-1">
+            <div id='map'></div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/conwetlab/ngsijs@85dc8ed3f401385f64b183a7e1fabde2d4858877/dist/NGSI.min.js"></script>
+    <script type="text/javascript">
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWd1cm9kcmlndWV6IiwiYSI6ImNpaXdjMWpzcTAwMDN1bm00Mm0wZDhwNzkifQ.u44IBf_aP5YVogy7kCJVHA';
+        
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v10',
+            center: [-56.18816, -34.90328],
+            zoom: 14
+        });
+
+        var mapImages = {};
+
+        var connection = new NGSI.Connection("http://kobauy.ddns.net:1026", {
+            ngsi_proxy_url: "https://ngsiproxy.lab.fiware.org"
+        });
+
+        connection.v2.createSubscription({
+            description: `[koba-tea-playground] A subscription to get buses location updates`,
+            subject: {
+                entities: [
+                    {
+                        'idPattern': '.*',
+                        'type': 'Bus'
+                    }
+                ]
+            },
+            notification: {
+                callback: function (res) {
+                    for (var i in res.data) {
+                        var idBus = res.data[i].codigoBus.value;
+                        var idVariant = res.data[i].linea.value;
+                        var id = idBus + '-' + idVariant;
+                        var feature = { geometry: res.data[i].location.value, type: 'Feature' };
+                        
+                        if (!mapImages[id]) {
+                            /**
+                             * Si aún no hay ícono en el mapa para el ómnibus res.data[i], descargo una imagen
+                             * que lo represente y la agrego al mapa
+                             */
+                            mapImages[id] = true; // confiamos en que la imagen se podrá descargar
+                            map.loadImage('https://img.shields.io/badge/-' + idVariant + '-red.png', function (err, image) {
+                                if (err) throw err;
+                                map.addImage(id, image);
+                                map.addSource(id, { type: 'geojson', data: feature });
+                                map.addLayer({
+                                    id: id,
+                                    type: 'symbol',
+                                    source: id,
+                                    layout: {
+                                        'icon-image': id
+                                    }
+                                });
+                            });
+                        }
+                        else {
+                            /**
+                             * Si en cambio ya hay un ícono en el mapa para el ómnibus res.data[i], simplemente
+                             * actualizo su ubicación
+                             */ 
+                            map.getSource(id).setData(feature)
+                        }
+                    }
+                },
+                attr: [
+                    'location'
+                ]
+            },
+            expires: (function () {
+                var expirationDate = new Date();
+                expirationDate.setDate(expirationDate.getDate() + 7);
+                return expirationDate.toISOString();
+            })()
+        });
+    </script>
+</body>
+</html>
