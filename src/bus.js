@@ -19,15 +19,14 @@ class Bus {
           if (err) throw err;
 
           for (var i in buses) {
-            debugger;
             var bus = buses[i];
             let latitude = bus['latitude'];
             let longitude = bus['longitude'];
             let point = { latitude: latitude, longitude: longitude };
 
             var distance = Distance.getDistance(this.busStop, point, 2);
-            if (distance < 1) {
-              resolve(bus['id']);
+            if (distance < 2) {
+              resolve(bus);
             }
           }
         });
