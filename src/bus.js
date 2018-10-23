@@ -18,6 +18,8 @@ class Bus {
         .exec((err, buses) => {
           if (err) throw err;
 
+          let res = undefined;
+
           for (var i in buses) {
             var bus = buses[i];
             let latitude = bus['latitude'];
@@ -25,10 +27,13 @@ class Bus {
             let point = { latitude: latitude, longitude: longitude };
 
             var distance = Distance.getDistance(this.busStop, point, 2);
-            if (distance < 2) {
-              resolve(bus);
+            
+            if (distance < 20) {
+              res = bus;
             }
           }
+
+          resolve(res);
         });
     });
   }
