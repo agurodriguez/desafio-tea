@@ -10,5 +10,5 @@
 
 [Ir al playground](https://koba-tea.herokuapp.com/playground)
 
-⚠️ Deshabilitar CORS para poder obtener los datos de los ómnibus en tiempo real (Ver https://github.com/conwetlab/ngsijs#using-ngsijs-from-normal-web-pages)
+⚠️ Deshabilitar CORS para poder obtener los datos de los ómnibus en tiempo real ([Más info](https://github.com/conwetlab/ngsijs#using-ngsijs-from-normal-web-pages))
 
