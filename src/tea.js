@@ -12,7 +12,7 @@ class Tea {
 
     constructor() {
         this.busLocationChangesSubscription = undefined;
-        this.mongodb = mongoose.connect('mongodb://localhost/tea', { useNewUrlParser: true });
+        this.mongodb = mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true });
     }
 
     /**
