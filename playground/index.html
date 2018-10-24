@@ -23,6 +23,19 @@
             bottom: 0;
             left: 0;
         }
+        #map .marker {
+            width: 32px;
+            height: 32px;
+            background-position: -8px -8px;
+            background-size: 48px 48px;
+            border-radius: 16px;
+            cursor: pointer;
+        }
+        #buttons {
+            position: absolute;
+            right: 0;
+            padding: 12px;
+        }
     </style>
 </head>
 <body>
@@ -70,7 +83,10 @@
             </nav>
         </div>
         <div id="map-wrapper" class="flex-grow-1">
-            <div id='map'></div>
+            <div id="map"></div>
+            <div id="buttons">
+                <button class="btn">getNextBusForBusStop</button>
+            </div>
         </div>
     </div>
 
@@ -78,6 +94,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
     <script type="text/javascript" src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.5.2/randomColor.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/socket.io-client@2.1.1/dist/socket.io.js"></script>
     <script type="text/javascript">
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWd1cm9kcmlndWV6IiwiYSI6ImNpaXdjMWpzcTAwMDN1bm00Mm0wZDhwNzkifQ.u44IBf_aP5YVogy7kCJVHA';
@@ -89,9 +106,10 @@
             zoom: 14
         });
 
-        map.on('load', function () {
+        var mapImages = {};
+        var mapMarkers = {};
 
-            var mapImages = {};
+        map.on('load', function () {
 
             var socket = io.connect('http://localhost:8080');
             socket.on('busesLocations', function (data) {
@@ -101,34 +119,14 @@
                     var idVariant = data[i].linea.value;
                     var id = idBus + '-' + idVariant;
                     var feature = { geometry: data[i].location.value, type: 'Feature' };
-                    
-                    if (!mapImages[id]) {
-                        /**
-                         * Si aún no hay ícono en el mapa para el ómnibus data[i], descargo una imagen
-                         * que lo represente y la agrego al mapa
-                         */
-                        mapImages[id] = true; // confiamos en que la imagen se podrá descargar
-                        map.loadImage('https://img.shields.io/badge/' + id + '-red.png', function (err, image) {
-                            if (err) throw err;
-                            map.addImage(id, image);
-                            map.addSource(id, { type: 'geojson', data: feature });
-                            map.addLayer({
-                                id: id,
-                                type: 'symbol',
-                                source: id,
-                                layout: {
-                                    'icon-allow-overlap': true,
-                                    'icon-image': id
-                                }
-                            });
-                        });
+                    if (!mapMarkers[id]) {
+                        var markerColor = randomColor({ hue: 'green' }).substr(1);
+                        var markerDiv = $('<div class="marker" style="background-image: url(https://placeholder.pics/svg/75/'+markerColor+'/FFFFFF-'+markerColor+'/'+idBus+');">')[0];
+                        mapMarkers[id] = new mapboxgl.Marker(markerDiv).setLngLat(feature.geometry.coordinates);
+                        mapMarkers[id].addTo(map);
                     }
                     else {
-                        /**
-                         * Si en cambio ya hay un ícono en el mapa para el ómnibus data[i], simplemente
-                         * actualizo su ubicación
-                         */ 
-                        map.getSource(id).setData(feature)
+                        mapMarkers[id].setLngLat(feature.geometry.coordinates);
                     }
                 }
             });
