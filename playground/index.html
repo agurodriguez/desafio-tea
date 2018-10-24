@@ -101,6 +101,7 @@
                 <button class="btn btn-light" onclick="javascript:getNextBusForBusStop();">getNextBusForBusStop</button>
                 <button class="btn btn-light" onclick="javascript:getLastBusForBusStop();">getLastBusForBusStop</button>
                 <button class="btn btn-light" onclick="javascript:getNextBusForBusStopEta();">getNextBusForBusStopEta</button>
+                <button class="btn btn-light" onclick="javascript:drawPath();">drawPath</button>
             </div>
         </div>
     </div>
@@ -188,6 +189,39 @@
         });
     </script>
     <script>
+        function drawPath() {
+            swal({ content: { element: 'input', attributes: { placeholder: '44' } } }).then(value => {
+                $.ajax({
+                    url: KOBA_TEA_URL+'/test/getPathForBus/'+value,
+                    success: function (res) {
+                        var line = { type: 'LineString', coordinates: [] };
+                        for (var i in res) line.coordinates.push([res[i].longitude, res[i].latitude]);
+
+                        map.addLayer({
+                            id: 'path-' + value,
+                            type: 'line',
+                            source: {
+                                type: 'geojson',
+                                data: {
+                                    type: 'Feature',
+                                    properties: {},
+                                    geometry: line
+                                }
+                            },
+                            layout: {
+                                'line-cap': 'round',
+                                'line-join': 'round'
+                            },
+                            paint: {
+                                'line-color': '#888',
+                                'line-width': 8
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
         function getNextBusForBusStop() {
             swal({ content: { element: 'input', attributes: { placeholder: '7920, 3233' } } }).then(value => {
                 try {

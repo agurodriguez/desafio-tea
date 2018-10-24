@@ -1,4 +1,6 @@
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+    const fs = require('fs');
+    if (!fs.existsSync('.env')) fs.copyFileSync('.env.sample', '.env');
     require('dotenv').config();
 }
 
@@ -32,6 +34,10 @@ app.get('/test/getLastBusForBusStop/:busVariant/:busStopId', function (req, res)
 
 app.get('/test/getNextBusForBusStopEta/:busVariant/:busStopId', function (req, res) {
     tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+});
+
+app.get('/test/getPathForBus/:busId', function (req, res) {
+    tea.getPathForBus(req.params.busId).then(r => res.send(r)).catch(err => res.send(err));
 });
 
 io.on('connection', function (socket) {

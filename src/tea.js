@@ -213,6 +213,14 @@ class Tea {
     }
 
     /**
+     * Retorna el camino seguido por el ómnibus identificado por `busId`
+     * @param {number} busId 
+     */
+    getPathForBus(busId) {
+        return BusGeolocation.find({ busId: busId }).sort({ timestamp: -1 });
+    }
+
+    /**
      * Retorna el tiempo que demoró el ómnibus identificado por `busId` en
      * ir del punto `from` al punto `to`
      * @param {number} busId
@@ -304,6 +312,10 @@ class Tea {
         this.startBusesLocationsPuller();
     }
 
+    /**
+     * Inicia un proceso de pulling de las locaciones de todos los ómnibus
+     * cada 30 segundos
+     */
     startBusesLocationsPuller() {
         let fetchBusesLocations = () => {
             orion
