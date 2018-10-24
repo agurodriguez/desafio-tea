@@ -285,17 +285,17 @@ class Tea {
     handleOrionAccumulate(body) {
         if (body.subscriptionId == this.busLocationChangesSubscription.id) {
             body.data.forEach(item => {
-                let busGeolocation = new BusGeolocation({
+                let data = {
                     busId: item.id,
                     busVariant: item.linea.value,
                     latitude: item.location.value.coordinates[1],
                     longitude: item.location.value.coordinates[0],
                     timestamp: moment(item.timestamp.value).unix()
+                };
+                // Ver https://stackoverflow.com/a/33401897
+                BusGeolocation.findOneAndUpdate(data, data, { upsert: true }, (err) => {
+                    if (err) console.log(err);
                 });
-
-                busGeolocation.save();
-
-                // console.log(`${busGeolocation} saved to local db`);
             });
         }
     }
