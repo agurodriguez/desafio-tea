@@ -200,6 +200,40 @@ class Tea {
 
     /**
      * Retorna el tiempo que demoró el ómnibus identificado por `busId` en
+     * ir de la parada `busStopId1` a la parada `busStopId2`
+     * @param {number} busId
+     * @param {Point} from
+     * @param {Point} to
+     */
+    getTimeBetweenTwoBusStopsForBus(busVariant, busId, busStopId1, busStopId2) {
+        let busStopPoint1 = undefined;
+        let busStopPoint2 = undefined;
+
+        return this.getBusVariantStops(busVariant)
+            .then(stops => {
+                stops.forEach(stop => {
+                    if (stop.codigoParada == busStopId1) {
+                        busStopPoint1 = [parseFloat(stop.lat), parseFloat(stop.long)]
+                    }
+                    if (stop.codigoParada == busStopId2) {
+                        busStopPoint2 = [parseFloat(stop.lat), parseFloat(stop.long)]
+                    }
+                });
+
+                if (!busStopPoint1) {
+                    throw new Error('busStopId1 no corresponde a un id de parada válido');
+                }
+
+                if (!busStopPoint2) {
+                    throw new Error('busStopId2 no corresponde a un id de parada válido');
+                }
+                
+                return this.getTimeBetweenTwoPointsForBus(busId, busStopPoint1, busStopPoint2);
+            });
+    }
+
+    /**
+     * Retorna el tiempo que demoró el ómnibus identificado por `busId` en
      * ir del punto `from` al punto `to`
      * @param {number} busId
      * @param {Point} from
@@ -215,7 +249,6 @@ class Tea {
                     var distance = 100;
                     var timeStampOrigin = undefined;
                     var timeStampDestination = undefined;
-                    console.log("busId:", busId, " locaciones: ",geolocations)
 
                     geolocations.forEach(geolocation => {
                         distance = geolib.getDistance(
@@ -232,25 +265,17 @@ class Tea {
                             { latitude: geolocation.latitude, longitude: geolocation.longitude }
                         );
 
-                        console.log("distancia: " + distance)
-
                         if (distance < 300 && timeStampDestination == undefined) {
                             timeStampDestination = geolocation.timestamp;
                         }
                     });
+                    
+                    var date1 = new Date(timeStampOrigin * 1000).getTime();
+                    var date2 = new Date(timeStampDestination * 1000).getTime();
 
-                    //calculo la diferencia
-                    var date1 = new Date(timeStampOrigin);
-                    var date2 = new Date(timeStampDestination);
-
-                    var res = Math.abs(date1 - date2) / 1000;
-                    var days = Math.floor(res / 86400);
-                    var hours = Math.floor(res / 3600) % 24;
-                    var minutes = Math.floor(res / 60) % 60;
-                    var seconds = res % 60;
-
-                    //devuelvo el resultado en segundos
-                    resolve(days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds);
+                    var segs = Math.abs(date1 - date2) / 1000;
+                    
+                    resolve(segs);
                 })
         });
     }
@@ -315,7 +340,7 @@ class Tea {
                     
                     setTimeout(() => {
                         fetchBusesLocations();
-                    }, 30 * 1000);
+                    }, 10 * 1000);
 
                     this.events.emit('busesLocations', locations);
                 });

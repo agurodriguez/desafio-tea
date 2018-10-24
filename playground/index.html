@@ -101,6 +101,7 @@
                 <button class="btn btn-light" onclick="javascript:getNextBusForBusStop();">getNextBusForBusStop</button>
                 <button class="btn btn-light" onclick="javascript:getLastBusForBusStop();">getLastBusForBusStop</button>
                 <button class="btn btn-light" onclick="javascript:getNextBusForBusStopEta();">getNextBusForBusStopEta</button>
+                <button class="btn btn-light" onclick="javascript:getTimeBetweenTwoBusStopsForBus();">getTimeBetweenTwoBusStopsForBus</button>
                 <button class="btn btn-light" onclick="javascript:drawPath();">drawPath</button>
             </div>
         </div>
@@ -126,6 +127,8 @@
         var mapImages = {};
         var mapMarkers = {};
 
+        var trackBusId = 919;
+
         map.on('load', function () {
 
             var socket = io.connect(KOBA_TEA_URL);
@@ -144,6 +147,46 @@
                     }
                     else {
                         mapMarkers[id].setLngLat(feature.geometry.coordinates);
+                    }
+
+                    if (idBus == trackBusId) {
+                        var pathId = 'path-'+idBus;
+
+                        if (!map.getSource(pathId)) {
+                            map.addLayer({
+                                id: pathId,
+                                type: 'line',
+                                source: {
+                                    type: 'geojson',
+                                    data: {
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: { type: 'LineString', coordinates: [feature.geometry.coordinates] }
+                                    }
+                                },
+                                layout: {
+                                    'line-cap': 'round',
+                                    'line-join': 'round'
+                                },
+                                paint: {
+                                    'line-color': '#888',
+                                    'line-width': 8
+                                }
+                            });
+                        }
+                        else {
+                            var source = map.getSource(pathId);
+                            var coordinates = source._data.geometry.coordinates;
+
+                            if (coordinates[coordinates.length - 1][0] != feature.geometry.coordinates[0] ||
+                                coordinates[coordinates.length - 1][1] != feature.geometry.coordinates[1]) {
+                                    source.setData({
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: { type: 'LineString', coordinates: coordinates.concat([feature.geometry.coordinates]) }
+                                    });
+                                }
+                        }
                     }
                 }
             });
@@ -200,6 +243,7 @@
 
                         if (map.getLayer(id)) {
                             map.removeLayer(id);
+                            map.removeSource(id);
                         }
 
                         map.addLayer({
@@ -275,8 +319,24 @@
                 catch (ex) {
                     swal({ icon: 'error', text: ex.message });
                 }
-            })
-            
+            });
+        }
+
+        function getTimeBetweenTwoBusStopsForBus() {
+            swal({ content: { element: 'input', attributes: { placeholder: '7920, 44, 3229, 3230' } } }).then(value => {
+                try {
+                    var params = value.split(',').map(i => i.trim());
+                    $.ajax({
+                        url: KOBA_TEA_URL+'/test/getTimeBetweenTwoBusStopsForBus/'+params.join('/'),
+                        success: function (res) {
+                            swal($('<pre>'+JSON.stringify(res, {}, 2)+'</pre>')[0]);
+                        }
+                    });
+                }
+                catch (ex) {
+                    swal({ icon: 'error', text: ex.message });
+                }
+            });
         }
     </script>
 </body>

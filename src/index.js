@@ -40,6 +40,10 @@ app.get('/test/getPathForBus/:busId', function (req, res) {
     tea.getPathForBus(req.params.busId).then(r => res.send(r)).catch(err => res.send(err));
 });
 
+app.get('/test/getTimeBetweenTwoBusStopsForBus/:busVariant/:busId/:busStopId1/:busStopId2', function (req, res) {
+    tea.getTimeBetweenTwoBusStopsForBus(req.params.busVariant, req.params.busId, req.params.busStopId1, req.params.busStopId2).then(r => res.send(r.toString())).catch(err => res.send(err));
+});
+
 io.on('connection', function (socket) {
     console.log(`${socket.handshake.address} connected`);
     socket.on('disconnect', function () {
