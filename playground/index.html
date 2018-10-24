@@ -13,6 +13,9 @@
         html, body {
             height: 100%;
         }
+        pre {
+            text-align: left;
+        }
         #map-wrapper {
             position: relative;
         }
@@ -105,6 +108,7 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script type="text/javascript" src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.5.2/randomColor.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/socket.io-client@2.1.1/dist/socket.io.js"></script>
@@ -185,48 +189,55 @@
     </script>
     <script>
         function getNextBusForBusStop() {
-            try {
-                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
-                $.ajax({
-                    url: KOBA_TEA_URL+'/test/getNextBusForBusStop/'+params.join('/'),
-                    success: function (res) {
-                        alert(JSON.stringify(res, {}, 2));
-                    }
-                });
-            }
-            catch (ex) {
-                alert(ex.message);
-            }
+            swal({ content: { element: 'input', attributes: { placeholder: '7920, 3233' } } }).then(value => {
+                try {
+                    var params = value.split(',').map(i => i.trim());
+                    $.ajax({
+                        url: KOBA_TEA_URL+'/test/getNextBusForBusStop/'+params.join('/'),
+                        success: function (res) {
+                            swal($('<pre>'+JSON.stringify(res, {}, 2)+'</pre>')[0]);
+                        }
+                    });
+                }
+                catch (ex) {
+                    swal({ icon: 'error', text: ex.message });
+                }
+            });
         }
 
         function getLastBusForBusStop() {
-            try {
-                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
-                $.ajax({
-                    url: KOBA_TEA_URL+'/test/getLastBusForBusStop/'+params.join('/'),
-                    success: function (res) {
-                        alert(JSON.stringify(res, {}, 2));
-                    }
-                });
-            }
-            catch (ex) {
-                alert(ex.message);
-            }
+            swal({ content: { element: 'input', attributes: { placeholder: '7920, 3233' } } }).then(value => {
+                try {
+                    var params = value.split(',').map(i => i.trim());
+                    $.ajax({
+                        url: KOBA_TEA_URL+'/test/getLastBusForBusStop/'+params.join('/'),
+                        success: function (res) {
+                            swal($('<pre>'+JSON.stringify(res, {}, 2)+'</pre>')[0]);
+                        }
+                    });
+                }
+                catch (ex) {
+                    swal({ icon: 'error', text: ex.message });
+                }
+            });
         }
 
         function getNextBusForBusStopEta() {
-            try {
-                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
-                $.ajax({
-                    url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
-                    success: function (res) {
-                        alert(JSON.stringify(res, {}, 2));
-                    }
-                });
-            }
-            catch (ex) {
-                alert(ex.message);
-            }
+            swal({ content: { element: 'input', attributes: { placeholder: '7920, 3233' } } }).then(value => {
+                try {
+                    var params = value.split(',').map(i => i.trim());
+                    $.ajax({
+                        url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
+                        success: function (res) {
+                            swal($('<pre>'+JSON.stringify(res, {}, 2)+'</pre>')[0]);
+                        }
+                    });
+                }
+                catch (ex) {
+                    swal({ icon: 'error', text: ex.message });
+                }
+            })
+            
         }
     </script>
 </body>
