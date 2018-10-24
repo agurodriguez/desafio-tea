@@ -61,6 +61,51 @@ class Tea {
     }
 
     /**
+     * Retorna el último ómnibus con variante de línea igual a `busVariant`
+     * que pasó por la parada identificada por `busStopId`
+     * @param {number} busVariant
+     * @param {number} busStopId
+     */
+    getLastBusForBusStop(busVariant, busStopId) {
+        return new Promise((resolve, reject) => {
+            this.getBusVariantStops(busVariant).then(stops => {
+                let busVariantStop = stops.filter(stop => busStopId == stop.codigoParada);
+                
+                stops = stops.filter(
+                    busStop => busStop.ordinal > busVariantStop[0].ordinal
+                );
+                
+                let getBusesOfVariantNearToPromises = stops.map(busVariantStop =>
+                    orion
+                        .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                        .catch(reject)
+                        .then(res => {
+                            if (res.length > 0) {
+                                res[0].busStopOrdinal = busVariantStop.ordinal;
+                            }
+
+                            return res;
+                        })
+                );
+
+                Promise
+                    .all(getBusesOfVariantNearToPromises)
+                    .catch(reject)
+                    .then(values => {
+                        let buses = [].concat(...values);
+                        if (buses.length > 0) {
+                            buses = buses[0];
+                        } else {
+                            buses = undefined;
+                        }
+
+                        resolve(buses);
+                    });
+            });
+        });
+    }
+
+    /**
      * Retorna el siguiente ómnibus con variante de línea igual a `busVariant`
      * en pasar por la parada identificada por `busStopId`
      * @param {number} busVariant
@@ -141,73 +186,6 @@ class Tea {
                     this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
                         resolve(t);
                     });
-                });
-        });
-    }
-
-    /**
-     * Retorna el último ómnibus con variante de línea igual a `busVariant`
-     * que pasó por la parada identificada por `busStopId`
-     * @param {number} busVariant
-     * @param {number} busStopId
-     */
-    getLastBusForBusStop(busVariant, busStopId) {
-        return new Promise((resolve, reject) => {
-            this.getBusVariantStops(busVariant).then(stops => {
-                let busVariantStop = stops.filter(stop => busStopId == stop.codigoParada);
-                
-                stops = stops.filter(
-                    busStop => busStop.ordinal > busVariantStop[0].ordinal
-                );
-                
-                let getBusesOfVariantNearToPromises = stops.map(busVariantStop =>
-                    orion
-                        .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
-                        .catch(reject)
-                        .then(res => {
-                            if (res.length > 0) {
-                                res[0].busStopOrdinal = busVariantStop.ordinal;
-                            }
-
-                            return res;
-                        })
-                );
-
-                Promise
-                    .all(getBusesOfVariantNearToPromises)
-                    .catch(reject)
-                    .then(values => {
-                        let buses = [].concat(...values);
-                        if (buses.length > 0) {
-                            buses = buses[0];
-                        } else {
-                            buses = undefined;
-                        }
-
-                        resolve(buses);
-                    });
-            });
-        });
-    }
-
-    /**
-     * Retorna el último ómnibus con variante de línea igual a `busVariant`
-     * que pasó por la parada identificada por `busStopId`
-     * NOTA: Deprecada en favor de getLastBusForBusStop
-     * @param {number} busVariant
-     * @param {number} busStopId
-     */
-    getLastBusForBusStop2(busVariant, busStopId) {
-        return new Promise((resolve, reject) => {
-            this.getBusVariantStop(busVariant, busStopId)
-                .catch(reject)
-                .then(busStop => {
-                    const bus = require('./bus.js');
-                    
-                    (new bus({ latitude: parseFloat(busStop.lat), longitude: parseFloat(busStop.long) }))
-                        .getBusesGeolocations(busVariant)
-                        .catch(reject)
-                        .then(resolve)
                 });
         });
     }
