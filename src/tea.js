@@ -9,11 +9,45 @@ const orion = require('./services/orion');
 const BusGeolocation = require('./dao/busGeolocation');
 
 class Tea {
-
     constructor() {
         this.busLocationChangesSubscription = undefined;
         this.mongodb = mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true });
+       // this.createDatabase();
     }
+
+    /*createDatabase() {
+        console.log("llena bd");
+        const BusGeolocation = require('./dao/busGeolocation');
+    
+        fs.readFile('C:\\Users\\emiro\\Downloads\\historia-buses.txt', (err, data) => {
+        if (err) throw err;
+        var archivo = data.toString();
+        var obj = JSON.parse(archivo);
+        let locations = [];
+        obj.forEach(item => {
+            var time = moment(item.timestamp.value).unix();
+            item.posiciones.features.forEach(pos => {
+                var codigo = pos.properties.codigoBus;
+                var line = pos.properties.linea;
+                var lat = pos.geometry.coordinates[1];
+                var long = pos.geometry.coordinates[0];
+        
+                let busGeolocation = new BusGeolocation({
+                    busId: codigo,
+                    busVariant: line,
+                    latitude: lat,
+                    longitude: long,
+                    timestamp: time
+                });
+
+
+                locations.push(busGeolocation.save());
+            });
+        });
+
+        Promise.all(locations).then(() => console.log("termino"));
+        });
+    }*/
 
     /**
      * Retorna el calendario (las pasadas) para la variante de línea `busVariant`
@@ -69,6 +103,8 @@ class Tea {
                 let busVariantStop = busVariantStops.filter(
                     busStop => busStopId == busStop.codigoParada
                 );
+
+                console.log("aca")
                 
                 busVariantStops = busVariantStops.filter(
                     busStop => busStop.ordinal <= busVariantStop[0].ordinal
@@ -132,7 +168,7 @@ class Tea {
                     let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
                     let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
                     let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
-
+                    console.log("parada",busStopLocation, "last", lastBusLocation);
                     this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
                         resolve(t);
                     });
@@ -220,26 +256,29 @@ class Tea {
                 .sort({ timestamp: -1 })
                 .catch(reject)
                 .then(geolocations => {
-                    var d = 100;
-                    var timeStampOrigin;
-                    var timeStampDestination;
+                    var distance = 100;
+                    var timeStampOrigin = undefined;
+                    var timeStampDestination = undefined;
+                    console.log("busId:", busId, " locaciones: ",geolocations)
 
                     geolocations.forEach(geolocation => {
-                        geolib.getDistance(
+                        distance = geolib.getDistance(
                             { latitude: from[0], longitude: from[1] },
                             { latitude: geolocation.latitude, longitude: geolocation.longitude }
                         );
 
-                        if (d < 90) {
+                        if (distance < 300 && timeStampOrigin == undefined) {
                             timeStampOrigin = geolocation.timestamp;
                         }
 
-                        d = geolib.getDistance(
+                        distance = geolib.getDistance(
                             { latitude: to[0], longitude: to[1] },
                             { latitude: geolocation.latitude, longitude: geolocation.longitude }
                         );
 
-                        if (d < 90) {
+                        console.log("distancia: " + distance)
+
+                        if (distance < 300 && timeStampDestination == undefined) {
                             timeStampDestination = geolocation.timestamp;
                         }
                     });
