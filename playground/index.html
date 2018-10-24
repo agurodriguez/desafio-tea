@@ -345,7 +345,8 @@
                     $.ajax({
                         url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
                         success: function (res) {
-                            swal($('<pre>'+JSON.stringify(res, {}, 2)+'</pre>')[0]);
+                            console.log(res);
+                            swal($('<pre>'+res.time+'</pre>')[0]);
                         }
                     });
                 }

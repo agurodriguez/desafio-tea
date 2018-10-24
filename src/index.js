@@ -33,7 +33,7 @@ app.get('/test/getNextBusForBusStop/:busVariant/:busStopId', function (req, res)
 });
 
 app.get('/test/getNextBusForBusStopEta/:busVariant/:busStopId', function (req, res) {
-    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r.toString())).catch(err => res.send(err));
+    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
 });
 
 app.get('/test/getPathForBus/:busId', function (req, res) {

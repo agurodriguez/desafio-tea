@@ -175,18 +175,15 @@ class Tea {
                     let busStop = values[0];
                     let nextBus = values[1];
                     let lastBus = values[2];
-                    
-                    console.log('nextBus', nextBus)
-                    console.log('lastBus', lastBus);
 
                     let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
                     let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
                     let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
 
-                    console.log(lastBus.id, nextBusLocation, busStopLocation);
+                    // console.log(lastBus.id, nextBusLocation, busStopLocation);
                     
                     this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
-                        resolve(t);
+                        resolve({ time: t, lastBus: lastBus, nextBus: nextBus });
                     });
                 });
         });
