@@ -78,7 +78,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
     <script type="text/javascript" src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/conwetlab/ngsijs@85dc8ed3f401385f64b183a7e1fabde2d4858877/dist/NGSI.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/socket.io-client@2.1.1/dist/socket.io.js"></script>
     <script type="text/javascript">
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWd1cm9kcmlndWV6IiwiYSI6ImNpaXdjMWpzcTAwMDN1bm00Mm0wZDhwNzkifQ.u44IBf_aP5YVogy7kCJVHA';
         
@@ -89,68 +89,87 @@
             zoom: 14
         });
 
-        var mapImages = {};
+        map.on('load', function () {
 
-        var connection = new NGSI.Connection("http://kobauy.ddns.net:1026", {
-            ngsi_proxy_url: "https://ngsiproxy.lab.fiware.org"
-        });
+            var mapImages = {};
 
-        connection.v2.createSubscription({
-            description: `[koba-tea-playground] A subscription to get buses location updates`,
-            subject: {
-                entities: [
-                    {
-                        'idPattern': '.*',
-                        'type': 'Bus'
-                    }
-                ]
-            },
-            notification: {
-                callback: function (res) {
-                    for (var i in res.data) {
-                        var idBus = res.data[i].codigoBus.value;
-                        var idVariant = res.data[i].linea.value;
-                        var id = idBus + '-' + idVariant;
-                        var feature = { geometry: res.data[i].location.value, type: 'Feature' };
-                        
-                        if (!mapImages[id]) {
-                            /**
-                             * Si aún no hay ícono en el mapa para el ómnibus res.data[i], descargo una imagen
-                             * que lo represente y la agrego al mapa
-                             */
-                            mapImages[id] = true; // confiamos en que la imagen se podrá descargar
-                            map.loadImage('https://img.shields.io/badge/-' + idVariant + '-red.png', function (err, image) {
-                                if (err) throw err;
-                                map.addImage(id, image);
-                                map.addSource(id, { type: 'geojson', data: feature });
-                                map.addLayer({
-                                    id: id,
-                                    type: 'symbol',
-                                    source: id,
-                                    layout: {
-                                        'icon-image': id
-                                    }
-                                });
+            var socket = io.connect('http://localhost:8080');
+            socket.on('orion/accumulate', function (res) {
+                for (var i in res.data) {
+                    if (res.data[i].linea.value != 7920) continue;
+                    var idBus = res.data[i].codigoBus.value;
+                    var idVariant = res.data[i].linea.value;
+                    var id = idBus + '-' + idVariant;
+                    var feature = { geometry: res.data[i].location.value, type: 'Feature' };
+                    
+                    if (!mapImages[id]) {
+                        /**
+                         * Si aún no hay ícono en el mapa para el ómnibus res.data[i], descargo una imagen
+                         * que lo represente y la agrego al mapa
+                         */
+                        mapImages[id] = true; // confiamos en que la imagen se podrá descargar
+                        map.loadImage('https://img.shields.io/badge/' + id + '-red.png', function (err, image) {
+                            if (err) throw err;
+                            map.addImage(id, image);
+                            map.addSource(id, { type: 'geojson', data: feature });
+                            map.addLayer({
+                                id: id,
+                                type: 'symbol',
+                                source: id,
+                                layout: {
+                                    'icon-image': id
+                                }
                             });
-                        }
-                        else {
-                            /**
-                             * Si en cambio ya hay un ícono en el mapa para el ómnibus res.data[i], simplemente
-                             * actualizo su ubicación
-                             */ 
-                            map.getSource(id).setData(feature)
-                        }
+                        });
                     }
-                },
-                attr: [
-                    'location'
-                ]
-            },
-            expires: (function () {
-                var expirationDate = new Date();
-                expirationDate.setDate(expirationDate.getDate() + 7);
-                return expirationDate.toISOString();
-            })()
+                    else {
+                        /**
+                         * Si en cambio ya hay un ícono en el mapa para el ómnibus res.data[i], simplemente
+                         * actualizo su ubicación
+                         */ 
+                        map.getSource(id).setData(feature)
+                    }
+                }
+            });
+
+            $.ajax({
+                url: 'http://kobauy.ddns.net:1080/api/trayectosporlinea',
+                success: function (res) {
+                    res.trayectos.forEach(trayecto => {
+                        if (trayecto.linea == 7920) {
+                            var id = 'parada-' + trayecto.codigoParada;
+                            if (!mapImages[id]) {
+                                mapImages[id] = true;
+                                map.loadImage('https://img.shields.io/badge/-' + trayecto.codigoParada + '-blue.png', function (err, image) {
+                                    if (err) throw err;
+                                    map.addImage(id, image);
+                                    map.addLayer({
+                                        id: id,
+                                        type: 'symbol',
+                                        source: {
+                                            type: 'geojson',
+                                            data: {
+                                                type: 'FeatureCollection',
+                                                features: [{
+                                                    type: 'Feature',
+                                                    geometry: {
+                                                        type: 'Point',
+                                                        coordinates: [parseFloat(trayecto.long), parseFloat(trayecto.lat)]
+                                                    }
+                                                }]
+                                            }
+                                        },
+                                        layout: {
+                                            'icon-image': id
+                                        }
+                                    });
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
         });
     </script>
 </body>

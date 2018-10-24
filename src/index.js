@@ -23,7 +23,10 @@ app.post('/orion/accumulate', function (req, res) {
 });
 
 io.on('connection', function (socket) {
-    console.log(`${socket} connected`);
+    console.log(`${socket.handshake.address} connected`);
+    socket.on('disconnect', function () {
+        console.log(`${socket.handshake.address} disconnected`);
+    })
 });
 
 server.listen(process.env.PORT, function () {
