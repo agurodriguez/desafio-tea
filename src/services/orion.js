@@ -9,7 +9,7 @@ class Orion {
     }
 
     getBuses() {
-        return this.client.v2.listEntities({ type: 'Bus' }).then(res => res.results);
+        return this.client.v2.listEntities({ type: 'Bus', limit: 1000 }).then(res => res.results);
     }
 
     getBusesOfVariantNearTo(busVariant, point) {
