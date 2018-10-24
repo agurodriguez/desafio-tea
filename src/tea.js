@@ -68,41 +68,43 @@ class Tea {
      */
     getNextBusForBusStop(busVariant, busStopId) {
         return new Promise((resolve, reject) => {
-            this.getBusVariantStops(busVariant).then(busVariantStops => {
-                let busVariantStop = busVariantStops.filter(
-                    busStop => busStopId == busStop.codigoParada
-                );
-                
-                busVariantStops = busVariantStops.filter(
-                    busStop => busStop.ordinal < busVariantStop[0].ordinal
-                );
-                
-                let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop =>
-                    orion
-                        .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+            this.getBusVariantStops(busVariant)
+                .catch(reject)
+                .then(busVariantStops => {
+                    let busVariantStop = busVariantStops.filter(
+                        busStop => busStopId == busStop.codigoParada
+                    );
+                    
+                    busVariantStops = busVariantStops.filter(
+                        busStop => busStop.ordinal < busVariantStop[0].ordinal
+                    );
+                    
+                    let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop =>
+                        orion
+                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                            .catch(reject)
+                            .then(res => {
+                                if (res.length > 0) {
+                                    res[0].busStopOrdinal = busVariantStop.ordinal;
+                                }
+
+                                return res;
+                            })
+                    );
+
+                    Promise
+                        .all(getBusesOfVariantNearToPromises)
                         .catch(reject)
-                        .then(res => {
-                            if (res.length > 0) {
-                                res[0].busStopOrdinal = busVariantStop.ordinal;
+                        .then(values => {
+                            let buses = [].concat(...values);
+                            if (buses.length > 0) {
+                                buses = buses[buses.length - 1];
+                            } else {
+                                buses = undefined;
                             }
 
-                            return res;
-                        })
-                );
-
-                Promise
-                    .all(getBusesOfVariantNearToPromises)
-                    .catch(reject)
-                    .then(values => {
-                        let buses = [].concat(...values);
-                        if (buses.length > 0) {
-                            buses = buses[buses.length - 1];
-                        } else {
-                            buses = undefined;
-                        }
-
-                        resolve(buses);
-                    });
+                            resolve(buses);
+                        });
             });
         });
     }
