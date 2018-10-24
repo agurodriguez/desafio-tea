@@ -291,6 +291,33 @@ class Tea {
             .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
             .then(body => this.busLocationChangesSubscription = body.subscription)
             .catch(err => console.log(err));
+
+        this.startGeolocationsCollector();
+    }
+
+    startGeolocationsCollector() {
+        let fetchBusGeolocations = () => {
+            orion
+                .getBuses()
+                .then(buses => {
+                    buses.forEach(item => {
+                        let busGeolocation = new BusGeolocation({
+                            busId: item.id,
+                            busVariant: item.linea.value,
+                            latitude: item.location.value.coordinates[1],
+                            longitude: item.location.value.coordinates[0],
+                            timestamp: moment(item.timestamp.value).unix()
+                        });
+        
+                        busGeolocation.save();
+                    });
+                    setTimeout(() => {
+                        fetchBusGeolocations();
+                    }, 30 * 1000);
+                });
+        }
+
+        fetchBusGeolocations();
     }
 }
 

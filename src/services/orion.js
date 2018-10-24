@@ -8,6 +8,10 @@ class Orion {
         this.client = new ngsi.Connection(process.env.ORION_URL);
     }
 
+    getBuses() {
+        return this.client.v2.listEntities({ type: 'Bus' }).then(res => res.results);
+    }
+
     getBusesOfVariantNearTo(busVariant, point) {
         // usamos una request plana porque ngsijs parece no soportar el atributo georel 
         // (Ver http://conwetlab.github.io/ngsijs/stable/NGSI.Connection.html#.%22v2.listEntities%22__anchor)
