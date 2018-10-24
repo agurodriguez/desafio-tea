@@ -94,17 +94,17 @@
             var mapImages = {};
 
             var socket = io.connect('http://localhost:8080');
-            socket.on('orion/accumulate', function (res) {
-                for (var i in res.data) {
-                    if (res.data[i].linea.value != 7920) continue;
-                    var idBus = res.data[i].codigoBus.value;
-                    var idVariant = res.data[i].linea.value;
+            socket.on('busesLocations', function (data) {
+                for (var i in data) {
+                    if (data[i].linea.value != 7920) continue;
+                    var idBus = data[i].codigoBus.value;
+                    var idVariant = data[i].linea.value;
                     var id = idBus + '-' + idVariant;
-                    var feature = { geometry: res.data[i].location.value, type: 'Feature' };
+                    var feature = { geometry: data[i].location.value, type: 'Feature' };
                     
                     if (!mapImages[id]) {
                         /**
-                         * Si aún no hay ícono en el mapa para el ómnibus res.data[i], descargo una imagen
+                         * Si aún no hay ícono en el mapa para el ómnibus data[i], descargo una imagen
                          * que lo represente y la agrego al mapa
                          */
                         mapImages[id] = true; // confiamos en que la imagen se podrá descargar
@@ -124,7 +124,7 @@
                     }
                     else {
                         /**
-                         * Si en cambio ya hay un ícono en el mapa para el ómnibus res.data[i], simplemente
+                         * Si en cambio ya hay un ícono en el mapa para el ómnibus data[i], simplemente
                          * actualizo su ubicación
                          */ 
                         map.getSource(id).setData(feature)

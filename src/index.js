@@ -33,6 +33,10 @@ server.listen(process.env.PORT, function () {
     console.log(`koba-tea running on port ${process.env.PORT}`);
 });
 
+tea.events.on('busesLocations', (locations) => {
+    io.emit('busesLocations', locations);
+});
+
 tea.run();
 
 // tea.getNextBusForBusStop(7920, 2837).then(console.log);

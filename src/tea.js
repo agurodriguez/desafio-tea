@@ -1,53 +1,22 @@
 const csv = require('csv-parse');
+const events = require('events');
 const fs = require('fs');
 const geolib = require('geolib');
 const moment = require('moment');
 const mongoose = require('mongoose');
+
 const montevideo = require('./services/montevideo');
 const orion = require('./services/orion');
 
 const BusGeolocation = require('./dao/busGeolocation');
 
 class Tea {
+
     constructor() {
         this.busLocationChangesSubscription = undefined;
+        this.events = new events.EventEmitter();
         this.mongodb = mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true });
-       // this.createDatabase();
     }
-
-    /*createDatabase() {
-        console.log("llena bd");
-        const BusGeolocation = require('./dao/busGeolocation');
-    
-        fs.readFile('C:\\Users\\emiro\\Downloads\\historia-buses.txt', (err, data) => {
-        if (err) throw err;
-        var archivo = data.toString();
-        var obj = JSON.parse(archivo);
-        let locations = [];
-        obj.forEach(item => {
-            var time = moment(item.timestamp.value).unix();
-            item.posiciones.features.forEach(pos => {
-                var codigo = pos.properties.codigoBus;
-                var line = pos.properties.linea;
-                var lat = pos.geometry.coordinates[1];
-                var long = pos.geometry.coordinates[0];
-        
-                let busGeolocation = new BusGeolocation({
-                    busId: codigo,
-                    busVariant: line,
-                    latitude: lat,
-                    longitude: long,
-                    timestamp: time
-                });
-
-
-                locations.push(busGeolocation.save());
-            });
-        });
-
-        Promise.all(locations).then(() => console.log("termino"));
-        });
-    }*/
 
     /**
      * Retorna el calendario (las pasadas) para la variante de línea `busVariant`
@@ -224,6 +193,7 @@ class Tea {
     /**
      * Retorna el último ómnibus con variante de línea igual a `busVariant`
      * que pasó por la parada identificada por `busStopId`
+     * NOTA: Deprecada en favor de getLastBusForBusStop
      * @param {number} busVariant
      * @param {number} busStopId
      */
@@ -326,37 +296,42 @@ class Tea {
      * Inicia los procesos de koba-tea
      */
     run() {
-        orion
-            .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
-            .then(body => this.busLocationChangesSubscription = body.subscription)
-            .catch(err => console.log(err));
+        // orion
+        //     .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
+        //     .then(body => this.busLocationChangesSubscription = body.subscription)
+        //     .catch(err => console.log(err));
 
-        this.startGeolocationsCollector();
+        this.startBusesLocationsPuller();
     }
 
-    startGeolocationsCollector() {
-        let fetchBusGeolocations = () => {
+    startBusesLocationsPuller() {
+        let fetchBusesLocations = () => {
             orion
                 .getBuses()
-                .then(buses => {
-                    buses.forEach(item => {
-                        let busGeolocation = new BusGeolocation({
+                .then(locations => {
+                    locations.forEach(item => {
+                        let data = {
                             busId: item.id,
                             busVariant: item.linea.value,
                             latitude: item.location.value.coordinates[1],
                             longitude: item.location.value.coordinates[0],
                             timestamp: moment(item.timestamp.value).unix()
+                        };
+                        // Ver https://stackoverflow.com/a/33401897
+                        BusGeolocation.findOneAndUpdate(data, data, { upsert: true }, (err) => {
+                            if (err) console.log(err);
                         });
-        
-                        busGeolocation.save();
                     });
+                    
                     setTimeout(() => {
-                        fetchBusGeolocations();
+                        fetchBusesLocations();
                     }, 30 * 1000);
+
+                    this.events.emit('busesLocations', locations);
                 });
         }
 
-        fetchBusGeolocations();
+        fetchBusesLocations();
     }
 }
 
