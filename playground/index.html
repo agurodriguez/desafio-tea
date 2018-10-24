@@ -194,11 +194,16 @@
                 $.ajax({
                     url: KOBA_TEA_URL+'/test/getPathForBus/'+value,
                     success: function (res) {
+                        var id = 'path-' + value;
                         var line = { type: 'LineString', coordinates: [] };
                         for (var i in res) line.coordinates.push([res[i].longitude, res[i].latitude]);
 
+                        if (map.getLayer(id)) {
+                            map.removeLayer(id);
+                        }
+
                         map.addLayer({
-                            id: 'path-' + value,
+                            id: id,
                             type: 'line',
                             source: {
                                 type: 'geojson',
