@@ -24,16 +24,16 @@ app.post('/orion/accumulate', function (req, res) {
     io.emit('orion/accumulate', req.body);
 });
 
-app.get('/test/getNextBusForBusStop/:busVariant/:busStopId', function (req, res) {
-    tea.getNextBusForBusStop(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
-});
-
 app.get('/test/getLastBusForBusStop/:busVariant/:busStopId', function (req, res) {
     tea.getLastBusForBusStop(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
 });
 
+app.get('/test/getNextBusForBusStop/:busVariant/:busStopId', function (req, res) {
+    tea.getNextBusForBusStop(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+});
+
 app.get('/test/getNextBusForBusStopEta/:busVariant/:busStopId', function (req, res) {
-    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r.toString())).catch(err => res.send(err));
 });
 
 app.get('/test/getPathForBus/:busId', function (req, res) {

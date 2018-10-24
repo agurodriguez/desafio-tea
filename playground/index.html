@@ -102,6 +102,7 @@
                 <button class="btn btn-light" onclick="javascript:getLastBusForBusStop();">getLastBusForBusStop</button>
                 <button class="btn btn-light" onclick="javascript:getNextBusForBusStopEta();">getNextBusForBusStopEta</button>
                 <button class="btn btn-light" onclick="javascript:getTimeBetweenTwoBusStopsForBus();">getTimeBetweenTwoBusStopsForBus</button>
+                <button class="btn btn-light" onclick="javascript:drawPathForBus();">drawPathForBus</button>
                 <button class="btn btn-light" onclick="javascript:drawPath();">drawPath</button>
             </div>
         </div>
@@ -233,6 +234,38 @@
     </script>
     <script>
         function drawPath() {
+            swal({ content: { element: 'input', attributes: { placeholder: '44' } } }).then(value => {
+                var id = 'path-debug';
+                
+                if (map.getLayer(id)) {
+                    map.removeLayer(id);
+                    map.removeSource(id);
+                }
+
+                map.addLayer({
+                    id: id,
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: { type: 'LineString', coordinates: JSON.parse(value) }
+                        }
+                    },
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    paint: {
+                        'line-color': '#6c6c6c',
+                        'line-width': 6
+                    }
+                });
+            });
+        }
+
+        function drawPathForBus() {
             swal({ content: { element: 'input', attributes: { placeholder: '44' } } }).then(value => {
                 $.ajax({
                     url: KOBA_TEA_URL+'/test/getPathForBus/'+value,
