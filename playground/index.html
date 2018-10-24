@@ -36,7 +36,17 @@
             right: 0;
             padding: 12px;
         }
+        #buttons .btn {
+            margin-bottom: 12px;
+            float: right;
+            clear: both;
+        }
     </style>
+
+    <script type="text/javascript">
+        var KOBA_TEA_URL = 'http://localhost:8080';
+        var SIMULADOR_URL = 'http://kobauy.ddns.net:1080';
+    </script>
 </head>
 <body>
     <div class="d-flex flex-column h-100">
@@ -85,7 +95,9 @@
         <div id="map-wrapper" class="flex-grow-1">
             <div id="map"></div>
             <div id="buttons">
-                <button class="btn">getNextBusForBusStop</button>
+                <button class="btn btn-light" onclick="javascript:getNextBusForBusStop();">getNextBusForBusStop</button>
+                <button class="btn btn-light" onclick="javascript:getLastBusForBusStop();">getLastBusForBusStop</button>
+                <button class="btn btn-light" onclick="javascript:getNextBusForBusStopEta();">getNextBusForBusStopEta</button>
             </div>
         </div>
     </div>
@@ -111,7 +123,7 @@
 
         map.on('load', function () {
 
-            var socket = io.connect('http://localhost:8080');
+            var socket = io.connect(KOBA_TEA_URL);
             socket.on('busesLocations', function (data) {
                 for (var i in data) {
                     if (data[i].linea.value != 7920) continue;
@@ -120,7 +132,7 @@
                     var id = idBus + '-' + idVariant;
                     var feature = { geometry: data[i].location.value, type: 'Feature' };
                     if (!mapMarkers[id]) {
-                        var markerColor = randomColor({ hue: 'green' }).substr(1);
+                        var markerColor = randomColor({ hue: 'red' }).substr(1);
                         var markerDiv = $('<div class="marker" style="background-image: url(https://placeholder.pics/svg/75/'+markerColor+'/FFFFFF-'+markerColor+'/'+idBus+');">')[0];
                         mapMarkers[id] = new mapboxgl.Marker(markerDiv).setLngLat(feature.geometry.coordinates);
                         mapMarkers[id].addTo(map);
@@ -132,7 +144,7 @@
             });
 
             $.ajax({
-                url: 'http://kobauy.ddns.net:1080/api/trayectosporlinea',
+                url: SIMULADOR_URL+'/api/trayectosporlinea',
                 success: function (res) {
                     res.trayectos.forEach(trayecto => {
                         if (trayecto.linea == 7920) {
@@ -170,6 +182,52 @@
             });
             
         });
+    </script>
+    <script>
+        function getNextBusForBusStop() {
+            try {
+                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
+                $.ajax({
+                    url: KOBA_TEA_URL+'/test/getNextBusForBusStop/'+params.join('/'),
+                    success: function (res) {
+                        alert(JSON.stringify(res, {}, 2));
+                    }
+                });
+            }
+            catch (ex) {
+                alert(ex.message);
+            }
+        }
+
+        function getLastBusForBusStop() {
+            try {
+                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
+                $.ajax({
+                    url: KOBA_TEA_URL+'/test/getLastBusForBusStop/'+params.join('/'),
+                    success: function (res) {
+                        alert(JSON.stringify(res, {}, 2));
+                    }
+                });
+            }
+            catch (ex) {
+                alert(ex.message);
+            }
+        }
+
+        function getNextBusForBusStopEta() {
+            try {
+                var params = prompt('Ingrese: \n\nbusVariant (Línea), busStopId (Parada)').split(',').map(i => i.trim());
+                $.ajax({
+                    url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
+                    success: function (res) {
+                        alert(JSON.stringify(res, {}, 2));
+                    }
+                });
+            }
+            catch (ex) {
+                alert(ex.message);
+            }
+        }
     </script>
 </body>
 </html>

@@ -22,6 +22,18 @@ app.post('/orion/accumulate', function (req, res) {
     io.emit('orion/accumulate', req.body);
 });
 
+app.get('/test/getNextBusForBusStop/:busVariant/:busStopId', function (req, res) {
+    tea.getNextBusForBusStop(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+});
+
+app.get('/test/getLastBusForBusStop/:busVariant/:busStopId', function (req, res) {
+    tea.getLastBusForBusStop(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+});
+
+app.get('/test/getNextBusForBusStopEta/:busVariant/:busStopId', function (req, res) {
+    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(r => res.send(r)).catch(err => res.send(err));
+});
+
 io.on('connection', function (socket) {
     console.log(`${socket.handshake.address} connected`);
     socket.on('disconnect', function () {
@@ -38,7 +50,3 @@ tea.events.on('busesLocations', (locations) => {
 });
 
 tea.run();
-
-// tea.getNextBusForBusStop(7920, 2837).then(console.log);
-// tea.getLastBusForBusStop(7920, 2959).then(console.log)
-// tea.getNextBusForBusStopEta(7920, 3219).then(console.log);

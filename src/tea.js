@@ -72,11 +72,9 @@ class Tea {
                 let busVariantStop = busVariantStops.filter(
                     busStop => busStopId == busStop.codigoParada
                 );
-
-                console.log("aca")
                 
                 busVariantStops = busVariantStops.filter(
-                    busStop => busStop.ordinal <= busVariantStop[0].ordinal
+                    busStop => busStop.ordinal < busVariantStop[0].ordinal
                 );
                 
                 let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop =>
@@ -137,7 +135,7 @@ class Tea {
                     let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
                     let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
                     let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
-                    console.log("parada",busStopLocation, "last", lastBusLocation);
+                    
                     this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
                         resolve(t);
                     });
