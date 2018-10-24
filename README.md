@@ -8,4 +8,8 @@
 
 ## Playground
 
+Herramienta que permite visualizar los datos de la simulación en tiempo real.
+
+![](docs/screenshot-playground.png)
+
 [Ir al playground](https://koba-tea.herokuapp.com/playground)
