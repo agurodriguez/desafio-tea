@@ -176,6 +176,10 @@ class Tea {
                     let nextBus = values[1];
                     let lastBus = values[2];
 
+                    if (!lastBus || !nextBus) {
+                        throw new Error('No se pudo encontrar el ómnibus próximo o el anterior');
+                    }
+
                     let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
                     let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
                     let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
@@ -287,17 +291,27 @@ class Tea {
     handleOrionAccumulate(body) {
         if (body.subscriptionId == this.busLocationChangesSubscription.id) {
             body.data.forEach(item => {
-                let data = {
-                    busId: item.id,
-                    busVariant: item.linea.value,
-                    latitude: item.location.value.coordinates[1],
-                    longitude: item.location.value.coordinates[0],
-                    timestamp: moment(item.timestamp.value).unix()
-                };
-                // Ver https://stackoverflow.com/a/33401897
-                BusGeolocation.findOneAndUpdate(data, data, { upsert: true }, (err) => {
-                    if (err) console.log(err);
-                });
+                if (item.location.value.coordinates[0] != 0 && 
+                    item.location.value.coordinates[1] != 0) {
+                        BusGeolocation
+                            .find({
+                                busId: item.id,
+                                busVariant: item.linea.value,
+                                latitude: item.location.value.coordinates[1],
+                                longitude: item.location.value.coordinates[0]
+                            })
+                            .then(res => {
+                                if (res.length == 0) {
+                                    new BusGeolocation({
+                                        busId: item.id,
+                                        busVariant: item.linea.value,
+                                        latitude: item.location.value.coordinates[1],
+                                        longitude: item.location.value.coordinates[0],
+                                        timestamp: moment(item.timestamp.value).unix()
+                                    }).save();
+                                }
+                            });
+                }
             });
         }
     }
@@ -324,24 +338,27 @@ class Tea {
                 .getBuses()
                 .then(locations => {
                     locations.forEach(item => {
-                        BusGeolocation
-                            .find({
-                                busId: item.id,
-                                busVariant: item.linea.value,
-                                latitude: item.location.value.coordinates[1],
-                                longitude: item.location.value.coordinates[0]
-                            })
-                            .then(res => {
-                                if (res.length == 0) {
-                                    new BusGeolocation({
+                        if (item.location.value.coordinates[0] != 0 && 
+                            item.location.value.coordinates[1] != 0) {
+                                BusGeolocation
+                                    .find({
                                         busId: item.id,
                                         busVariant: item.linea.value,
                                         latitude: item.location.value.coordinates[1],
-                                        longitude: item.location.value.coordinates[0],
-                                        timestamp: moment(item.timestamp.value).unix()
-                                    }).save();
-                                }
-                            });
+                                        longitude: item.location.value.coordinates[0]
+                                    })
+                                    .then(res => {
+                                        if (res.length == 0) {
+                                            new BusGeolocation({
+                                                busId: item.id,
+                                                busVariant: item.linea.value,
+                                                latitude: item.location.value.coordinates[1],
+                                                longitude: item.location.value.coordinates[0],
+                                                timestamp: moment(item.timestamp.value).unix()
+                                            }).save();
+                                        }
+                                    });
+                        }
                     });
                     
                     setTimeout(() => {
