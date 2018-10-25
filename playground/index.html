@@ -48,6 +48,7 @@
 
     <script type="text/javascript">
         var KOBA_TEA_URL = 'http://localhost:8080';
+        var KOBA_TEA_CORS_PROXY_URL = 'http://localhost:8081';
         var SIMULADOR_URL = 'http://kobauy.ddns.net:1080';
 
         var VARIANT = 7903;
@@ -195,14 +196,14 @@
             });
 
             $.ajax({
-                url: SIMULADOR_URL+'/api/trayectosporlinea',
+                url: KOBA_TEA_CORS_PROXY_URL+'/'+SIMULADOR_URL+'/api/trayectosporlinea',
                 success: function (res) {
                     res.trayectos.forEach(trayecto => {
                         if (trayecto.linea == VARIANT) {
                             var id = 'parada-' + trayecto.codigoParada;
                             if (!mapImages[id]) {
                                 mapImages[id] = true;
-                                map.loadImage('https://img.shields.io/badge/' + trayecto.ordinal + '-' + trayecto.codigoParada + '-blue.png', function (err, image) {
+                                map.loadImage(KOBA_TEA_CORS_PROXY_URL+'/'+'https://img.shields.io/badge/'+trayecto.ordinal+'-'+trayecto.codigoParada+'-blue.png', function (err, image) {
                                     if (err) throw err;
                                     map.addImage(id, image);
                                     map.addLayer({
