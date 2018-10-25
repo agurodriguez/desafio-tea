@@ -49,6 +49,8 @@
     <script type="text/javascript">
         var KOBA_TEA_URL = 'http://localhost:8080';
         var SIMULADOR_URL = 'http://kobauy.ddns.net:1080';
+
+        var VARIANT = 7517;
     </script>
 </head>
 <body>
@@ -135,7 +137,7 @@
             var socket = io.connect(KOBA_TEA_URL);
             socket.on('busesLocations', function (data) {
                 for (var i in data) {
-                    if (data[i].linea.value != 7920) continue;
+                    if (data[i].linea.value != VARIANT) continue;
                     var idBus = data[i].codigoBus.value;
                     var idVariant = data[i].linea.value;
                     var id = idBus + '-' + idVariant;
@@ -196,11 +198,11 @@
                 url: SIMULADOR_URL+'/api/trayectosporlinea',
                 success: function (res) {
                     res.trayectos.forEach(trayecto => {
-                        if (trayecto.linea == 7920) {
+                        if (trayecto.linea == VARIANT) {
                             var id = 'parada-' + trayecto.codigoParada;
                             if (!mapImages[id]) {
                                 mapImages[id] = true;
-                                map.loadImage('https://img.shields.io/badge/-' + trayecto.codigoParada + '-blue.png', function (err, image) {
+                                map.loadImage('https://img.shields.io/badge/' + trayecto.ordinal + '-' + trayecto.codigoParada + '-blue.png', function (err, image) {
                                     if (err) throw err;
                                     map.addImage(id, image);
                                     map.addLayer({
@@ -346,6 +348,7 @@
                         url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
                         success: function (res) {
                             console.log(res);
+                            console.log(new Date(new Date(res.nextBus.timestamp.value).getTime() + res.time * 1000));
                             swal($('<pre>'+res.time+'</pre>')[0]);
                         }
                     });

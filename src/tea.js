@@ -324,17 +324,24 @@ class Tea {
                 .getBuses()
                 .then(locations => {
                     locations.forEach(item => {
-                        let data = {
-                            busId: item.id,
-                            busVariant: item.linea.value,
-                            latitude: item.location.value.coordinates[1],
-                            longitude: item.location.value.coordinates[0],
-                            timestamp: moment(item.timestamp.value).unix()
-                        };
-                        // Ver https://stackoverflow.com/a/33401897
-                        BusGeolocation.findOneAndUpdate(data, data, { upsert: true }, (err) => {
-                            if (err) console.log(err);
-                        });
+                        BusGeolocation
+                            .find({
+                                busId: item.id,
+                                busVariant: item.linea.value,
+                                latitude: item.location.value.coordinates[1],
+                                longitude: item.location.value.coordinates[0]
+                            })
+                            .then(res => {
+                                if (res.length == 0) {
+                                    new BusGeolocation({
+                                        busId: item.id,
+                                        busVariant: item.linea.value,
+                                        latitude: item.location.value.coordinates[1],
+                                        longitude: item.location.value.coordinates[0],
+                                        timestamp: moment(item.timestamp.value).unix()
+                                    }).save();
+                                }
+                            });
                     });
                     
                     setTimeout(() => {
