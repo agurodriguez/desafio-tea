@@ -327,7 +327,7 @@ class Tea {
      */
     run() {
         // orion
-        //     .subscribeToBusLocationChanges(`${process.env.PUBLIC_URL}/orion/accumulate`)
+        //     .subscribeToBusLocationChanges(`${process.env.SERVICIO_URL}/orion/accumulate`)
         //     .then(body => this.busLocationChangesSubscription = body.subscription)
         //     .catch(err => console.log(err));
 
