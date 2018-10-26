@@ -68,41 +68,47 @@ class Tea {
      */
     getLastBusForBusStop(busVariant, busStopId) {
         return new Promise((resolve, reject) => {
-            this.getBusVariantStops(busVariant).then(stops => {
-                let busVariantStop = stops.filter(stop => busStopId == stop.codigoParada);
-                
-                stops = stops.filter(
-                    busStop => busStop.ordinal > busVariantStop[0].ordinal
-                );
-                
-                let getBusesOfVariantNearToPromises = stops.map(busVariantStop =>
-                    orion
-                        .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+            this.getBusVariantStops(busVariant)
+                .catch(reject)    
+                .then(stops => {
+                    let busVariantStop = stops.filter(
+                        stop => busStopId == stop.codigoParada
+                    );
+                    
+                    var ordinal = 
+
+                    stops = stops.filter(
+                        busStop => parseInt(busStop.ordinal) > busVariantStop[0].ordinal
+                    );
+
+                    let getBusesOfVariantNearToPromises = stops.map(busVariantStop =>
+                        orion
+                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                            .catch(reject)
+                            .then(res => {
+                                if (res.length > 0) {
+                                    res[0].busStopOrdinal = busVariantStop.ordinal;
+                                }
+
+                                return res;
+                            })
+                    );
+
+                    Promise
+                        .all(getBusesOfVariantNearToPromises)
                         .catch(reject)
-                        .then(res => {
-                            if (res.length > 0) {
-                                res[0].busStopOrdinal = busVariantStop.ordinal;
+                        .then(values => {
+                            let buses = [].concat(...values);
+                            if (buses.length > 0) {
+                                buses = buses[0];
+                            } else {
+                                buses = undefined;
                             }
 
-                            return res;
-                        })
-                );
-
-                Promise
-                    .all(getBusesOfVariantNearToPromises)
-                    .catch(reject)
-                    .then(values => {
-                        let buses = [].concat(...values);
-                        if (buses.length > 0) {
-                            buses = buses[0];
-                        } else {
-                            buses = undefined;
-                        }
-
-                        resolve(buses);
-                    });
+                            resolve(buses);
+                        });
+                });
             });
-        });
     }
 
     /**
@@ -121,7 +127,7 @@ class Tea {
                     );
                     
                     busVariantStops = busVariantStops.filter(
-                        busStop => busStop.ordinal < busVariantStop[0].ordinal
+                        busStop => parseInt(busStop.ordinal) < busVariantStop[0].ordinal
                     );
                     
                     let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop =>
@@ -175,20 +181,17 @@ class Tea {
                     let busStop = values[0];
                     let nextBus = values[1];
                     let lastBus = values[2];
-
                     if (!lastBus || !nextBus) {
-                        throw new Error('No se pudo encontrar el ómnibus próximo o el anterior');
+                        resolve([]);
+                    } else {
+                        let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
+                        let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
+                        let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
+                        
+                        this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
+                            resolve({ time: t, lastBus: lastBus, nextBus: nextBus });
+                        });
                     }
-
-                    let busStopLocation = [parseFloat(busStop.lat), parseFloat(busStop.long)];
-                    let nextBusLocation = [nextBus.location.value.coordinates[1], nextBus.location.value.coordinates[0]];
-                    let lastBusLocation = [lastBus.location.value.coordinates[1], lastBus.location.value.coordinates[0]];
-
-                    // console.log(lastBus.id, nextBusLocation, busStopLocation);
-                    
-                    this.getTimeBetweenTwoPointsForBus(lastBus.id, nextBusLocation, busStopLocation).then(t => {
-                        resolve({ time: t, lastBus: lastBus, nextBus: nextBus });
-                    });
                 });
         });
     }
@@ -272,12 +275,9 @@ class Tea {
                             timeStampDestination = geolocation.timestamp;
                         }
                     });
-                    
-                    var date1 = new Date(timeStampOrigin * 1000).getTime();
-                    var date2 = new Date(timeStampDestination * 1000).getTime();
 
-                    var segs = Math.abs(date1 - date2) / 1000;
-                    
+                    var segs = Math.abs((timeStampDestination - timeStampOrigin)) / 1000;
+
                     resolve(segs);
                 })
         });

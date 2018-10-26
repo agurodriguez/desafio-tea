@@ -47,8 +47,8 @@
     </style>
 
     <script type="text/javascript">
-        var KOBA_TEA_URL = 'http://localhost:8080';
-        var KOBA_TEA_CORS_PROXY_URL = 'http://localhost:8081';
+        var KOBA_TEA_URL = 'http://localhost:8089';
+        var KOBA_TEA_CORS_PROXY_URL = 'http://localhost:8090';
         var SIMULADOR_URL = 'http://kobauy.ddns.net:1080';
 
         var VARIANT = 7903;
@@ -348,9 +348,11 @@
                     $.ajax({
                         url: KOBA_TEA_URL+'/test/getNextBusForBusStopEta/'+params.join('/'),
                         success: function (res) {
-                            console.log(res);
-                            console.log(new Date(new Date(res.nextBus.timestamp.value).getTime() + res.time * 1000));
-                            swal($('<pre>'+res.time+'</pre>')[0]);
+                            if (res.time == undefined) {
+                                swal($('<pre>'+res+'</pre>')[0]);
+                            } else {
+                                swal($('<pre>'+res.time+'</pre>')[0]);
+                            }
                         }
                     });
                 }

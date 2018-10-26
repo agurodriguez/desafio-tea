@@ -67,3 +67,4 @@ tea.events.on('busesLocations', (locations) => {
 });
 
 tea.run();
+
