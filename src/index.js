@@ -15,8 +15,19 @@ var io = require('socket.io')(server);
 app.use(require('body-parser').urlencoded({ extended: false }));
 app.use(require('body-parser').json());
 
-app.get('/nextBus/:busVariant/:busStopId', async function (req, res) {
-    tea.getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId).then(eta => res.send(eta))
+app.get('/nextBus/:busVariant/:busStopId', function (req, res) {
+    tea
+        .getNextBusForBusStopEta(req.params.busVariant, req.params.busStopId)
+        .catch(err => res.send([]))
+        .then(eta => {
+            res.send({
+                id_linea: req.params.busVariant,
+                id_parada: req.params.busStopId,
+                id_bus: eta.nextBus.id,
+                location: eta.nextBus.location,
+                tea: Math.round(eta.time)
+            });
+        });
 });
 
 app.post('/orion/accumulate', function (req, res) {
@@ -67,4 +78,3 @@ tea.events.on('busesLocations', (locations) => {
 });
 
 tea.run();
-

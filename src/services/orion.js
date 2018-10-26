@@ -12,7 +12,7 @@ class Orion {
         return this.client.v2.listEntities({ type: 'Bus', limit: 1000 }).then(res => res.results);
     }
 
-    getBusesOfVariantNearTo(busVariant, point) {
+    getBusesOfVariantNearTo(busVariant, point, maxDistance) {
         // usamos una request plana porque ngsijs parece no soportar el atributo georel 
         // (Ver http://conwetlab.github.io/ngsijs/stable/NGSI.Connection.html#.%22v2.listEntities%22__anchor)
         return request.get(
@@ -21,7 +21,7 @@ class Orion {
                 qs: { 
                     type: 'Bus', 
                     q: `linea:'${busVariant}'`,
-                    georel: 'near;maxDistance:100',
+                    georel: 'near;maxDistance:' + maxDistance,
                     geometry: 'point',
                     coords: `${point[0]},${point[1]}`
                 },

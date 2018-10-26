@@ -75,15 +75,16 @@ class Tea {
                         stop => busStopId == stop.codigoParada
                     );
                     
-                    var ordinal = 
-
                     stops = stops.filter(
-                        busStop => parseInt(busStop.ordinal) > busVariantStop[0].ordinal
+                        busStop => parseInt(busStop.ordinal) >= busVariantStop[0].ordinal
                     );
 
-                    let getBusesOfVariantNearToPromises = stops.map(busVariantStop =>
-                        orion
-                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                    let marginDistance = 70;
+
+                    let getBusesOfVariantNearToPromises = stops.map(busVariantStop => {
+                        marginDistance = Math.min(300, marginDistance + 50);
+                        return orion
+                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long], marginDistance)
                             .catch(reject)
                             .then(res => {
                                 if (res.length > 0) {
@@ -92,6 +93,7 @@ class Tea {
 
                                 return res;
                             })
+                        }
                     );
 
                     Promise
@@ -130,9 +132,12 @@ class Tea {
                         busStop => parseInt(busStop.ordinal) < busVariantStop[0].ordinal
                     );
                     
-                    let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop =>
-                        orion
-                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long])
+                    let maxDistance = 50;
+
+                    let getBusesOfVariantNearToPromises = busVariantStops.map(busVariantStop => {
+                        maxDistance = Math.min(300, maxDistance + 50);
+                        return orion
+                            .getBusesOfVariantNearTo(busVariant, [busVariantStop.lat, busVariantStop.long], maxDistance)
                             .catch(reject)
                             .then(res => {
                                 if (res.length > 0) {
@@ -140,7 +145,8 @@ class Tea {
                                 }
 
                                 return res;
-                            })
+                            });
+                        }
                     );
 
                     Promise
