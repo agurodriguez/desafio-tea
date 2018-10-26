@@ -1,6 +1,8 @@
 # Desafío TEA
 
-[Manual Técnico](docs/manual-tecnico-desafio-tea%201.4.pdf)
+[Bases y Condiciones](docs/basesycondiciones-desafioeta3.pdf)
+
+[Informe] (docs/informe.pdf)
 
 ## Desarrollo 
 
