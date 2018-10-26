@@ -2,7 +2,7 @@
 
 [Bases y Condiciones](docs/basesycondiciones-desafioeta3.pdf)
 
-[Informe](docs/informe.pdf)
+[Informe](docs/Informe.pdf)
 
 ## Requerimientos
 
