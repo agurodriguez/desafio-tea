@@ -2,6 +2,11 @@
 
 [Manual Técnico](docs/manual-tecnico-desafio-tea%201.4.pdf)
 
+## Requerimientos
+
+* MongoDB
+* NodeJS
+
 ## Desarrollo 
 
 [Ver DEVELOPMENT.md](DEVELOPMENT.md)
